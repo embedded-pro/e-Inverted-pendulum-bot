@@ -96,17 +96,17 @@ graph TD
 
 ## Component Decomposition
 
-| Sub-component | Responsibility |
-|---------------|----------------|
-| Inertial sensing | Acquire calibrated angular rate and acceleration in the body frame; signal staleness and transfer failure |
-| Wheel odometry | Decode both quadrature encoders into signed wheel position and velocity; derive chassis forward velocity and yaw rate |
-| Attitude estimation | Fuse inertial measurements into body pitch and pitch rate with an explicit validity indication |
-| Balance control | Host the interchangeable control strategies; turn estimated state and setpoints into per-wheel effort |
-| Motion actuation | Configure the motor driver, map effort onto bridge duty and direction, surface driver faults |
-| Safety supervision | Own the operating mode; arm, disarm, detect faults, latch them, and force the drive to a safe state |
-| Connectivity | Present the GATT server: teleoperation, telemetry, tuning and mode control |
-| Application orchestration | Compose the components, schedule the control loops, route setpoints and telemetry |
-| Platform abstraction | Declare the peripheral roles the application needs; realised per board and mocked for tests |
+| Sub-component             | Responsibility                                                                                                        |
+|---------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| Inertial sensing          | Acquire calibrated angular rate and acceleration in the body frame; signal staleness and transfer failure             |
+| Wheel odometry            | Decode both quadrature encoders into signed wheel position and velocity; derive chassis forward velocity and yaw rate |
+| Attitude estimation       | Fuse inertial measurements into body pitch and pitch rate with an explicit validity indication                        |
+| Balance control           | Host the interchangeable control strategies; turn estimated state and setpoints into per-wheel effort                 |
+| Motion actuation          | Configure the motor driver, map effort onto bridge duty and direction, surface driver faults                          |
+| Safety supervision        | Own the operating mode; arm, disarm, detect faults, latch them, and force the drive to a safe state                   |
+| Connectivity              | Present the GATT server: teleoperation, telemetry, tuning and mode control                                            |
+| Application orchestration | Compose the components, schedule the control loops, route setpoints and telemetry                                     |
+| Platform abstraction      | Declare the peripheral roles the application needs; realised per board and mocked for tests                           |
 
 ```mermaid
 graph LR
@@ -151,24 +151,24 @@ graph LR
 
 ### Provided Interfaces
 
-| Interface | Direction | Purpose | Invariants |
-|-----------|-----------|---------|------------|
-| Robot control service (GATT) | provided | The sole external interface: motion commands, mode control, telemetry, tuning | Pairing required before any commanding write; one client at a time |
-| Telemetry stream | provided | Notify the connected client of the robot state | Emitted only while subscribed; values within one update come from a single control iteration; never blocks the control loop |
-| Tuning and strategy selection | provided | Read and write the active strategy and its parameters | Accepted only while not ARMED; parameter set is self-describing so a client needs no built-in knowledge of the strategy |
-| Operating mode | provided | Report and command the mode | Exactly one mode is active; only defined transitions are accepted; faults latch until explicitly cleared |
+| Interface                     | Direction | Purpose                                                                       | Invariants                                                                                                                  |
+|-------------------------------|-----------|-------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Robot control service (GATT)  | provided  | The sole external interface: motion commands, mode control, telemetry, tuning | Pairing required before any commanding write; one client at a time                                                          |
+| Telemetry stream              | provided  | Notify the connected client of the robot state                                | Emitted only while subscribed; values within one update come from a single control iteration; never blocks the control loop |
+| Tuning and strategy selection | provided  | Read and write the active strategy and its parameters                         | Accepted only while not ARMED; parameter set is self-describing so a client needs no built-in knowledge of the strategy     |
+| Operating mode                | provided  | Report and command the mode                                                   | Exactly one mode is active; only defined transitions are accepted; faults latch until explicitly cleared                    |
 
 ### Required Interfaces
 
-| Interface | Direction | Purpose | Invariants |
-|-----------|-----------|---------|------------|
-| Inertial measurement source | required | Angular rate and acceleration in the body frame | Fixed axis convention independent of the part fitted; failure and staleness are reported, never silently substituted |
-| Wheel encoder source | required | Signed incremental counts and index events per wheel | Lossless across counter wrap; forward motion is positive on both wheels |
-| Motor bridge control | required | Signed effort per motor, plus coast and brake disable states | Coast is always available; disable must not require a healthy control loop |
-| Motor driver configuration and fault channel | required | Configure the driver and observe its fault output | Configuration is verified by read-back; an asserted fault disables both bridges |
-| Bluetooth peripheral | required | Advertising, connection lifecycle, pairing, GATT database | Connection loss is observable to the application |
-| Non-volatile parameter store | required | Persist the strategy selection and its parameters | A failed or absent store degrades to built-in defaults rather than blocking startup |
-| Timebase | required | Drive the control loops and measure latency and jitter | Monotonic; periods are met within the specified jitter bound |
+| Interface                                    | Direction | Purpose                                                      | Invariants                                                                                                           |
+|----------------------------------------------|-----------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Inertial measurement source                  | required  | Angular rate and acceleration in the body frame              | Fixed axis convention independent of the part fitted; failure and staleness are reported, never silently substituted |
+| Wheel encoder source                         | required  | Signed incremental counts and index events per wheel         | Lossless across counter wrap; forward motion is positive on both wheels                                              |
+| Motor bridge control                         | required  | Signed effort per motor, plus coast and brake disable states | Coast is always available; disable must not require a healthy control loop                                           |
+| Motor driver configuration and fault channel | required  | Configure the driver and observe its fault output            | Configuration is verified by read-back; an asserted fault disables both bridges                                      |
+| Bluetooth peripheral                         | required  | Advertising, connection lifecycle, pairing, GATT database    | Connection loss is observable to the application                                                                     |
+| Non-volatile parameter store                 | required  | Persist the strategy selection and its parameters            | A failed or absent store degrades to built-in defaults rather than blocking startup                                  |
+| Timebase                                     | required  | Drive the control loops and measure latency and jitter       | Monotonic; periods are met within the specified jitter bound                                                         |
 
 ---
 
@@ -210,26 +210,26 @@ sequenceDiagram
 
 ## Cross-Cutting Concerns
 
-| Concern | Policy / Approach |
-|---------|-------------------|
+| Concern        | Policy / Approach                                                                                                                                                                               |
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Error handling | No exceptions in runtime code. Nullable results are optional values; failures are explicit error enumerations. Sensor failures propagate as an invalid estimate rather than a substituted value |
-| Timing budget | Balance loop 500 Hz, outer velocity and yaw loop 50 Hz, telemetry 25 Hz. Sensor-to-actuator latency at most 3 ms; loop start jitter within 10% of the period |
-| Memory | No heap after startup; bounded containers only; worst-case stack depth determined at build time |
-| Safety | The supervisor can always reach a safe state. Disabling the drive does not depend on the control loop being healthy; all safety-initiated disables coast rather than brake |
-| Determinism | No recursion and no unbounded iteration on the control path. Strategy selection is confined to a non-ARMED state so that the armed control path has fixed cost |
-| Testability | Every component is written against the platform abstraction and exercised on the host with mocks; specification scenarios live in `documentation/use-cases/` |
-| Portability | Boards differ only in their platform implementation; the host build is a first-class target |
+| Timing budget  | Balance loop 500 Hz, outer velocity and yaw loop 50 Hz, telemetry 25 Hz. Sensor-to-actuator latency at most 3 ms; loop start jitter within 10% of the period                                    |
+| Memory         | No heap after startup; bounded containers only; worst-case stack depth determined at build time                                                                                                 |
+| Safety         | The supervisor can always reach a safe state. Disabling the drive does not depend on the control loop being healthy; all safety-initiated disables coast rather than brake                      |
+| Determinism    | No recursion and no unbounded iteration on the control path. Strategy selection is confined to a non-ARMED state so that the armed control path has fixed cost                                  |
+| Testability    | Every component is written against the platform abstraction and exercised on the host with mocks; specification scenarios live in `documentation/use-cases/`                                    |
+| Portability    | Boards differ only in their platform implementation; the host build is a first-class target                                                                                                     |
 
 ---
 
 ## Open Questions & Decisions
 
-| # | Question / Decision | Status | Options Considered | Rationale |
-|---|---------------------|--------|--------------------|-----------|
-| 1 | Which inertial sensor part | open | MPU6050; LSM303 + L3GD20 | Deliberately deferred. Sensing is specified against an abstract measurement role with a fixed axis convention, so the part can be chosen on availability without touching the estimator or the controller |
-| 2 | Which control strategy ships as the default | open | Cascaded PID; LQR | Decided *not* to settle architecturally. Both are implemented behind the strategy interface and selected at runtime, so this is a configuration default rather than a design commitment |
-| 3 | Motor driver operating mode | decided | Internal step sequencer; external commutation | One DRV8711 drives two brushed DC motors by bypassing its indexer and driving both full bridges directly — the part supplies two bridges, current regulation and fault reporting for one SPI configuration channel |
-| 4 | Runtime strategy dispatch versus the no-virtual-dispatch rule | decided | Compile-time selection; runtime interface | Runtime selection is required by the product. Dispatch happens once per balance iteration in task context, not in an interrupt path, and the strategy cannot change while ARMED, so the armed cost is fixed. The per-iteration budget is stated in the balance control design |
-| 5 | Whether the estimator is a complementary filter or a Kalman filter | open | Complementary; single-axis Kalman | Both satisfy the estimation requirements; the trade is tuning effort against cycles. Deferred to implementation and recorded in the estimation design |
-| 6 | Pairing and bonding policy | open | Just-works pairing; passkey | Requirements demand pairing before any commanding write; the association model is a security decision still to be taken |
-| 7 | Where specification scenarios execute | decided | `integration_tests/features/`; staged in `documentation/use-cases/` | Staged under `documentation/use-cases/` because the executable suite runs everything in `integration_tests/features/` and the components do not exist yet. Scenarios migrate per component as step definitions land |
+| # | Question / Decision                                                | Status  | Options Considered                                                  | Rationale                                                                                                                                                                                                                                                                     |
+|---|--------------------------------------------------------------------|---------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Which inertial sensor part                                         | open    | MPU6050; LSM303 + L3GD20                                            | Deliberately deferred. Sensing is specified against an abstract measurement role with a fixed axis convention, so the part can be chosen on availability without touching the estimator or the controller                                                                     |
+| 2 | Which control strategy ships as the default                        | open    | Cascaded PID; LQR                                                   | Decided *not* to settle architecturally. Both are implemented behind the strategy interface and selected at runtime, so this is a configuration default rather than a design commitment                                                                                       |
+| 3 | Motor driver operating mode                                        | decided | Internal step sequencer; external commutation                       | One DRV8711 drives two brushed DC motors by bypassing its indexer and driving both full bridges directly — the part supplies two bridges, current regulation and fault reporting for one SPI configuration channel                                                            |
+| 4 | Runtime strategy dispatch versus the no-virtual-dispatch rule      | decided | Compile-time selection; runtime interface                           | Runtime selection is required by the product. Dispatch happens once per balance iteration in task context, not in an interrupt path, and the strategy cannot change while ARMED, so the armed cost is fixed. The per-iteration budget is stated in the balance control design |
+| 5 | Whether the estimator is a complementary filter or a Kalman filter | open    | Complementary; single-axis Kalman                                   | Both satisfy the estimation requirements; the trade is tuning effort against cycles. Deferred to implementation and recorded in the estimation design                                                                                                                         |
+| 6 | Pairing and bonding policy                                         | open    | Just-works pairing; passkey                                         | Requirements demand pairing before any commanding write; the association model is a security decision still to be taken                                                                                                                                                       |
+| 7 | Where specification scenarios execute                              | decided | `integration_tests/features/`; staged in `documentation/use-cases/` | Staged under `documentation/use-cases/` because the executable suite runs everything in `integration_tests/features/` and the components do not exist yet. Scenarios migrate per component as step definitions land                                                           |

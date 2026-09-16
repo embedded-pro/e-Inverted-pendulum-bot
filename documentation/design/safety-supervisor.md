@@ -89,23 +89,23 @@ so that behaviour never depends on history from a previous session.
 
 ### Provided
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Mode query | Report the active operating mode | Exactly one mode is active at any instant; readable from any context without blocking |
-| Mode command | Request arm, disarm or clear-fault | Checked against the transition table; a rejected request changes nothing. Arming additionally requires upright attitude and a valid estimate |
-| Fault report | Report the latched fault cause | Valid whenever the mode is FAULT; persists until the fault is cleared |
-| Drive permission | Tell actuation and control whether the drive may be energised | Deasserted before the mode leaves ARMED, never after |
-| Loop service notification | Accept the balance loop's periodic liveness signal | Absence for 3 consecutive periods is a fault |
+| Interface                 | Purpose                                                       | Contract                                                                                                                                     |
+|---------------------------|---------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| Mode query                | Report the active operating mode                              | Exactly one mode is active at any instant; readable from any context without blocking                                                        |
+| Mode command              | Request arm, disarm or clear-fault                            | Checked against the transition table; a rejected request changes nothing. Arming additionally requires upright attitude and a valid estimate |
+| Fault report              | Report the latched fault cause                                | Valid whenever the mode is FAULT; persists until the fault is cleared                                                                        |
+| Drive permission          | Tell actuation and control whether the drive may be energised | Deasserted before the mode leaves ARMED, never after                                                                                         |
+| Loop service notification | Accept the balance loop's periodic liveness signal            | Absence for 3 consecutive periods is a fault                                                                                                 |
 
 ### Required
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Attitude estimate | Detect falls and check arming preconditions | Carries an explicit validity indication; the supervisor treats invalid as unsafe |
-| Motor driver health | Observe driver-reported faults | An asserted fault is latched even if it clears immediately afterwards |
-| Drive disable | Force both bridges to coast | Must succeed without a healthy control loop; coast, never brake |
-| Strategy lifecycle | Reset the active strategy on arming | Reset completes before the drive is permitted |
-| Timebase | Drive liveness monitoring | Independent of the balance loop it supervises |
+| Interface           | Purpose                                     | Contract                                                                         |
+|---------------------|---------------------------------------------|----------------------------------------------------------------------------------|
+| Attitude estimate   | Detect falls and check arming preconditions | Carries an explicit validity indication; the supervisor treats invalid as unsafe |
+| Motor driver health | Observe driver-reported faults              | An asserted fault is latched even if it clears immediately afterwards            |
+| Drive disable       | Force both bridges to coast                 | Must succeed without a healthy control loop; coast, never brake                  |
+| Strategy lifecycle  | Reset the active strategy on arming         | Reset completes before the drive is permitted                                    |
+| Timebase            | Drive liveness monitoring                   | Independent of the balance loop it supervises                                    |
 
 ---
 
@@ -182,35 +182,35 @@ sequenceDiagram
 
 ## Data Model
 
-| Entity | Field | Type / Unit | Range | Notes |
-|--------|-------|-------------|-------|-------|
-| Supervisor state | mode | enumeration | INIT, CALIBRATING, IDLE, ARMED, FAULT | Exactly one active |
-| Supervisor state | latchedCause | enumeration | None, Fall, DriverFault, EstimateInvalid, LoopStalled, SelfTestFailed | Meaningful only in FAULT |
-| Supervisor state | missedServices | count | 0 to 3 | Reset on each loop service; 3 triggers a fault |
-| Configuration | fallThreshold | degrees | 35 | Magnitude of pitch from upright |
-| Configuration | armWindow | degrees | 5 | Maximum tilt permitted when arming |
-| Configuration | coastDeadline | milliseconds | 20 | Budget from detection to bridges disabled |
+| Entity           | Field          | Type / Unit  | Range                                                                 | Notes                                          |
+|------------------|----------------|--------------|-----------------------------------------------------------------------|------------------------------------------------|
+| Supervisor state | mode           | enumeration  | INIT, CALIBRATING, IDLE, ARMED, FAULT                                 | Exactly one active                             |
+| Supervisor state | latchedCause   | enumeration  | None, Fall, DriverFault, EstimateInvalid, LoopStalled, SelfTestFailed | Meaningful only in FAULT                       |
+| Supervisor state | missedServices | count        | 0 to 3                                                                | Reset on each loop service; 3 triggers a fault |
+| Configuration    | fallThreshold  | degrees      | 35                                                                    | Magnitude of pitch from upright                |
+| Configuration    | armWindow      | degrees      | 5                                                                     | Maximum tilt permitted when arming             |
+| Configuration    | coastDeadline  | milliseconds | 20                                                                    | Budget from detection to bridges disabled      |
 
 ---
 
 ## Constraints & Limitations
 
-| Constraint | Value / Description |
-|------------|---------------------|
-| Fall-to-coast budget | 20 ms from the estimate crossing the threshold to both bridges disabled |
-| Liveness independence | The liveness monitor must not be driven by the loop it supervises |
-| Disable path | Reaching a safe state must not depend on the control loop, the estimator or the link |
-| No automatic recovery | There is no path from FAULT to ARMED without two separate operator commands |
-| Flat ground only | The fall threshold assumes a level surface; a sloped surface narrows the effective recoverable envelope |
-| Detection scope | The supervisor detects falls, not the causes of falls. A slipping wheel or a drained battery is visible only through its effect on attitude |
+| Constraint            | Value / Description                                                                                                                         |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Fall-to-coast budget  | 20 ms from the estimate crossing the threshold to both bridges disabled                                                                     |
+| Liveness independence | The liveness monitor must not be driven by the loop it supervises                                                                           |
+| Disable path          | Reaching a safe state must not depend on the control loop, the estimator or the link                                                        |
+| No automatic recovery | There is no path from FAULT to ARMED without two separate operator commands                                                                 |
+| Flat ground only      | The fall threshold assumes a level surface; a sloped surface narrows the effective recoverable envelope                                     |
+| Detection scope       | The supervisor detects falls, not the causes of falls. A slipping wheel or a drained battery is visible only through its effect on attitude |
 
 ---
 
 ## Open Questions
 
-| # | Question | Options | Status |
-|---|----------|---------|--------|
-| 1 | Should the fall threshold scale with measured wheel velocity, since a moving robot has less recovery margin? | Fixed threshold; velocity-dependent threshold | open |
-| 2 | Should a hardware watchdog back the software liveness monitor? | Software only; add the microcontroller watchdog | open |
-| 3 | Should battery voltage be a supervised fault source? | Out of scope this revision; add an undervoltage fault | open |
-| 4 | Should repeated falls within a short window require a longer operator acknowledgement? | Treat every fall identically; escalate on repetition | open |
+| # | Question                                                                                                     | Options                                               | Status |
+|---|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|--------|
+| 1 | Should the fall threshold scale with measured wheel velocity, since a moving robot has less recovery margin? | Fixed threshold; velocity-dependent threshold         | open   |
+| 2 | Should a hardware watchdog back the software liveness monitor?                                               | Software only; add the microcontroller watchdog       | open   |
+| 3 | Should battery voltage be a supervised fault source?                                                         | Out of scope this revision; add an undervoltage fault | open   |
+| 4 | Should repeated falls within a short window require a longer operator acknowledgement?                       | Treat every fall identically; escalate on repetition  | open   |

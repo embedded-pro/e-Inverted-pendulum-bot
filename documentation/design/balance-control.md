@@ -101,42 +101,42 @@ it discharges violently on release.
 
 ### Provided
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Control strategy | The common interface every law implements | Consumes estimated state and setpoints, produces per-wheel effort; bounded execution, no allocation, no recursion |
-| Effort command | Per-wheel signed effort for actuation | Within the configured actuator range; zero whenever not ARMED |
-| Strategy registry | Enumerate available strategies and report the active one | At least two strategies available; identifiers stable across builds |
-| Strategy selection | Change the active strategy | Accepted only while not ARMED; a rejected request leaves the active strategy and its state untouched |
-| Parameter descriptor | Describe the active strategy's tunable parameters | Reports count, order, identity and permitted range; changes when the active strategy changes |
-| Parameter access | Read and write parameters by index | Writes accepted only while not ARMED; out-of-range values rejected with the stored value unchanged |
-| Strategy lifecycle | Reset the active strategy's internal state | Called by the supervisor on every transition into ARMED; completes before the drive is permitted |
+| Interface            | Purpose                                                  | Contract                                                                                                          |
+|----------------------|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| Control strategy     | The common interface every law implements                | Consumes estimated state and setpoints, produces per-wheel effort; bounded execution, no allocation, no recursion |
+| Effort command       | Per-wheel signed effort for actuation                    | Within the configured actuator range; zero whenever not ARMED                                                     |
+| Strategy registry    | Enumerate available strategies and report the active one | At least two strategies available; identifiers stable across builds                                               |
+| Strategy selection   | Change the active strategy                               | Accepted only while not ARMED; a rejected request leaves the active strategy and its state untouched              |
+| Parameter descriptor | Describe the active strategy's tunable parameters        | Reports count, order, identity and permitted range; changes when the active strategy changes                      |
+| Parameter access     | Read and write parameters by index                       | Writes accepted only while not ARMED; out-of-range values rejected with the stored value unchanged                |
+| Strategy lifecycle   | Reset the active strategy's internal state               | Called by the supervisor on every transition into ARMED; completes before the drive is permitted                  |
 
 ### Required
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Attitude estimate | Pitch and pitch rate with validity | An invalid estimate must not produce a non-zero effort |
-| Chassis motion | Measured forward velocity and yaw rate | Updated at the control-loop rate |
-| Motion setpoints | Commanded forward velocity and yaw rate | Already range-checked and decayed by connectivity; zero when not ARMED |
-| Drive permission | Whether the drive may be energised | Deasserted forces zero effort regardless of strategy output |
-| Timebase | Loop period for rate-dependent terms | Nominal period is known; actual jitter stays within the specified bound |
+| Interface         | Purpose                                 | Contract                                                                |
+|-------------------|-----------------------------------------|-------------------------------------------------------------------------|
+| Attitude estimate | Pitch and pitch rate with validity      | An invalid estimate must not produce a non-zero effort                  |
+| Chassis motion    | Measured forward velocity and yaw rate  | Updated at the control-loop rate                                        |
+| Motion setpoints  | Commanded forward velocity and yaw rate | Already range-checked and decayed by connectivity; zero when not ARMED  |
+| Drive permission  | Whether the drive may be energised      | Deasserted forces zero effort regardless of strategy output             |
+| Timebase          | Loop period for rate-dependent terms    | Nominal period is known; actual jitter stays within the specified bound |
 
 ---
 
 ## Data Model
 
-| Entity | Field | Type / Unit | Range | Notes |
-|--------|-------|-------------|-------|-------|
-| Estimated state | pitch | radians | -0.61 to 0.61 | Beyond this the supervisor has already disarmed |
-| Estimated state | pitchRate | radians per second | -8.7 to 8.7 | Bias-corrected |
-| Estimated state | chassisVelocity | metres per second | -1.5 to 1.5 | Derived from both wheels |
-| Estimated state | yawRate | radians per second | -3.1 to 3.1 | Derived from the wheel difference |
-| Setpoints | velocitySetpoint | metres per second | -1.0 to 1.0 | Decays to zero on operator silence |
-| Setpoints | yawRateSetpoint | radians per second | -1.6 to 1.6 | Decays to zero on operator silence |
-| Output | effortLeft, effortRight | normalised effort | -1.0 to 1.0 | Mapped to duty and direction by actuation |
-| Parameter descriptor | index | count | 0 to parameterCount-1 | Position is the identity used over the link |
-| Parameter descriptor | minimum, maximum | same unit as the parameter | strategy-defined | Writes outside the range are rejected |
-| Registry | activeStrategy | identifier | one of the available strategies | Changeable only while not ARMED |
+| Entity               | Field                   | Type / Unit                | Range                           | Notes                                           |
+|----------------------|-------------------------|----------------------------|---------------------------------|-------------------------------------------------|
+| Estimated state      | pitch                   | radians                    | -0.61 to 0.61                   | Beyond this the supervisor has already disarmed |
+| Estimated state      | pitchRate               | radians per second         | -8.7 to 8.7                     | Bias-corrected                                  |
+| Estimated state      | chassisVelocity         | metres per second          | -1.5 to 1.5                     | Derived from both wheels                        |
+| Estimated state      | yawRate                 | radians per second         | -3.1 to 3.1                     | Derived from the wheel difference               |
+| Setpoints            | velocitySetpoint        | metres per second          | -1.0 to 1.0                     | Decays to zero on operator silence              |
+| Setpoints            | yawRateSetpoint         | radians per second         | -1.6 to 1.6                     | Decays to zero on operator silence              |
+| Output               | effortLeft, effortRight | normalised effort          | -1.0 to 1.0                     | Mapped to duty and direction by actuation       |
+| Parameter descriptor | index                   | count                      | 0 to parameterCount-1           | Position is the identity used over the link     |
+| Parameter descriptor | minimum, maximum        | same unit as the parameter | strategy-defined                | Writes outside the range are rejected           |
+| Registry             | activeStrategy          | identifier                 | one of the available strategies | Changeable only while not ARMED                 |
 
 ---
 
@@ -235,24 +235,24 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint | Value / Description |
-|------------|---------------------|
-| Iteration budget | The complete iteration — read state, dispatch to the strategy, saturate, publish effort — fits within the 500 Hz period and the 3 ms sensor-to-actuator latency |
-| Strategy dispatch | One indirect call per iteration, in task context. Not reachable from an interrupt handler, so the project's prohibition on virtual dispatch in interrupt paths is not engaged. The cost is fixed once ARMED because selection cannot change |
-| Memory | Strategies are constructed once at startup. No allocation on the control path; the registry has a compile-time fixed capacity |
-| Inner-outer separation | The cascade assumes the inner pitch loop is materially faster than the outer velocity loop; violating that produces a slow instability rather than an obvious failure |
-| Small-angle validity | Strategies are tuned against a model linearised about upright; behaviour degrades as the body approaches the fall threshold |
-| Level ground | No slope compensation. On an incline the robot holds a pitch offset and drifts unless the operator commands against it |
-| Parameter identity | Parameters are addressed by index, not by name, to keep the link payload bounded. Reordering a strategy's parameters is a breaking change for stored values |
+| Constraint             | Value / Description                                                                                                                                                                                                                         |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Iteration budget       | The complete iteration — read state, dispatch to the strategy, saturate, publish effort — fits within the 500 Hz period and the 3 ms sensor-to-actuator latency                                                                             |
+| Strategy dispatch      | One indirect call per iteration, in task context. Not reachable from an interrupt handler, so the project's prohibition on virtual dispatch in interrupt paths is not engaged. The cost is fixed once ARMED because selection cannot change |
+| Memory                 | Strategies are constructed once at startup. No allocation on the control path; the registry has a compile-time fixed capacity                                                                                                               |
+| Inner-outer separation | The cascade assumes the inner pitch loop is materially faster than the outer velocity loop; violating that produces a slow instability rather than an obvious failure                                                                       |
+| Small-angle validity   | Strategies are tuned against a model linearised about upright; behaviour degrades as the body approaches the fall threshold                                                                                                                 |
+| Level ground           | No slope compensation. On an incline the robot holds a pitch offset and drifts unless the operator commands against it                                                                                                                      |
+| Parameter identity     | Parameters are addressed by index, not by name, to keep the link payload bounded. Reordering a strategy's parameters is a breaking change for stored values                                                                                 |
 
 ---
 
 ## Open Questions
 
-| # | Question | Options | Status |
-|---|----------|---------|--------|
-| 1 | Which strategy is the factory default? | Cascaded PID; LQR | open |
-| 2 | Should stored parameters be invalidated when a strategy's descriptor changes between firmware versions? | Version the descriptor and reject stale values; always fall back to defaults | open |
-| 3 | Should the outer velocity loop limit the pitch setpoint it may request, independently of effort saturation? | Rely on effort saturation; add an explicit pitch setpoint clamp | open |
-| 4 | Should a third strategy exist for bench testing, commanding zero effort while reporting what it would have done? | Not needed; add an observing strategy | open |
-| 5 | How is the yaw term handled by a full-state strategy — inside the gain vector or as a separate loop? | Separate yaw loop for both strategies; per-strategy choice | open |
+| # | Question                                                                                                         | Options                                                                      | Status |
+|---|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------|
+| 1 | Which strategy is the factory default?                                                                           | Cascaded PID; LQR                                                            | open   |
+| 2 | Should stored parameters be invalidated when a strategy's descriptor changes between firmware versions?          | Version the descriptor and reject stale values; always fall back to defaults | open   |
+| 3 | Should the outer velocity loop limit the pitch setpoint it may request, independently of effort saturation?      | Rely on effort saturation; add an explicit pitch setpoint clamp              | open   |
+| 4 | Should a third strategy exist for bench testing, commanding zero effort while reporting what it would have done? | Not needed; add an observing strategy                                        | open   |
+| 5 | How is the yaw term handled by a full-state strategy — inside the gain vector or as a separate loop?             | Separate yaw loop for both strategies; per-strategy choice                   | open   |

@@ -55,20 +55,20 @@ any conforming strategy may satisfy them.
 The linearised model and symbols from `pendulum-dynamics.md`. Classical loop shaping (PID,
 phase margin), state-space feedback, controllability, and the algebraic Riccati equation.
 
-| Symbol | Meaning | Unit |
-|--------|---------|------|
-| $\mathbf{z}$ | State vector $[\theta,\ \dot{\theta},\ x,\ \dot{x}]^{\top}$ | mixed |
-| $u$ | Common-mode control effort (torque) | N·m |
-| $A,\ B$ | Linearised state and input matrices | — |
-| $K$ | State feedback gain vector | mixed |
-| $\mathcal{C}$ | Controllability matrix | — |
-| $Q,\ R$ | LQR state and input weighting matrices | — |
-| $P$ | Solution of the algebraic Riccati equation | — |
-| $\alpha$ | Plant gravity coefficient, $M_t m g \ell / \Delta$ | 1/s² |
-| $\beta$ | Plant input coefficient on pitch, $(M_t + m\ell/r)/\Delta$ | 1/(kg·m²) |
-| $k_\theta,\ k_{\dot\theta}$ | Feedback gains on pitch and pitch rate | mixed |
-| $\theta^\*$ | Pitch setpoint produced by the outer loop | rad |
-| $\omega_i,\ \omega_o$ | Inner and outer loop bandwidths | rad/s |
+| Symbol                      | Meaning                                                     | Unit      |
+|-----------------------------|-------------------------------------------------------------|-----------|
+| $\mathbf{z}$                | State vector $[\theta,\ \dot{\theta},\ x,\ \dot{x}]^{\top}$ | mixed     |
+| $u$                         | Common-mode control effort (torque)                         | N·m       |
+| $A,\ B$                     | Linearised state and input matrices                         | —         |
+| $K$                         | State feedback gain vector                                  | mixed     |
+| $\mathcal{C}$               | Controllability matrix                                      | —         |
+| $Q,\ R$                     | LQR state and input weighting matrices                      | —         |
+| $P$                         | Solution of the algebraic Riccati equation                  | —         |
+| $\alpha$                    | Plant gravity coefficient, $M_t m g \ell / \Delta$          | 1/s²      |
+| $\beta$                     | Plant input coefficient on pitch, $(M_t + m\ell/r)/\Delta$  | 1/(kg·m²) |
+| $k_\theta,\ k_{\dot\theta}$ | Feedback gains on pitch and pitch rate                      | mixed     |
+| $\theta^\*$                 | Pitch setpoint produced by the outer loop                   | rad       |
+| $\omega_i,\ \omega_o$       | Inner and outer loop bandwidths                             | rad/s     |
 
 ---
 
@@ -286,12 +286,12 @@ Both reduce to the same closed-loop structure, which is what the strategy interf
 
 ## Numerical Properties
 
-| Property   | Value / Condition |
-|------------|-------------------|
+| Property   | Value / Condition                                                                                                                                                                                                                   |
+|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Complexity | Cascade: about 20 multiply-accumulates per iteration across three loops. LQR: 4 multiply-accumulates for the inner product, plus the yaw loop. Both are trivial against a 500 Hz budget on a Cortex-M4 with hardware floating point |
-| Precision | Single precision throughout. Integral terms accumulate over thousands of iterations and are the only real precision concern; they are bounded by anti-windup clamping, which also bounds the accumulated rounding error |
-| Stability | Cascade: stable when $K_p^{i} > \alpha/\beta$, $K_d^{i} > 0$ and $\omega_i \gtrsim 5\omega_o$. LQR: guaranteed Hurwitz by construction for $Q \succeq 0$, $R \succ 0$ and controllable $(A,B)$ |
-| Range | Valid while the linearisation holds, to roughly 15° of pitch, and while the effort command is unsaturated |
+| Precision  | Single precision throughout. Integral terms accumulate over thousands of iterations and are the only real precision concern; they are bounded by anti-windup clamping, which also bounds the accumulated rounding error             |
+| Stability  | Cascade: stable when $K_p^{i} > \alpha/\beta$, $K_d^{i} > 0$ and $\omega_i \gtrsim 5\omega_o$. LQR: guaranteed Hurwitz by construction for $Q \succeq 0$, $R \succ 0$ and controllable $(A,B)$                                      |
+| Range      | Valid while the linearisation holds, to roughly 15° of pitch, and while the effort command is unsaturated                                                                                                                           |
 
 **Sensitivities.** The dominant sensitivity is to **loop rate and latency**, not to gains.
 A discrete implementation adds phase lag of approximately $\omega T_s/2$ radians from

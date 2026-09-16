@@ -108,42 +108,42 @@ controller so that the wheel geometry is described in exactly one place.
 
 ### Provided
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Effort application | Apply a signed effort to each motor | Monotonic mapping to duty and direction; ignored unless the drive is permitted |
-| Drive disable | Coast or brake both bridges | Coast must succeed without a healthy control loop; safety disables always coast |
-| Driver health | Report driver-asserted faults | Latched on assertion, even if the condition clears immediately |
-| Wheel measurement | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels |
-| Index events | Once-per-revolution marker per wheel | Reported without disturbing the accumulated count |
-| Chassis motion | Forward velocity and yaw rate | Derived from both wheels and the documented geometry; updated at the control-loop rate |
+| Interface          | Purpose                                        | Contract                                                                               |
+|--------------------|------------------------------------------------|----------------------------------------------------------------------------------------|
+| Effort application | Apply a signed effort to each motor            | Monotonic mapping to duty and direction; ignored unless the drive is permitted         |
+| Drive disable      | Coast or brake both bridges                    | Coast must succeed without a healthy control loop; safety disables always coast        |
+| Driver health      | Report driver-asserted faults                  | Latched on assertion, even if the condition clears immediately                         |
+| Wheel measurement  | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels                   |
+| Index events       | Once-per-revolution marker per wheel           | Reported without disturbing the accumulated count                                      |
+| Chassis motion     | Forward velocity and yaw rate                  | Derived from both wheels and the documented geometry; updated at the control-loop rate |
 
 ### Required
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Driver configuration channel | Write and read back driver configuration | Read-back mismatch is a fatal startup condition |
-| Bridge control outputs | Duty and direction per bridge | Switching frequency above the audible band |
-| Driver fault input | Observe the driver's fault assertion | Observable without polling the configuration channel |
-| Encoder channel inputs | A, B and index per wheel | Decoded without losing edges at maximum wheel speed |
-| Timebase | Velocity differencing interval | Monotonic; the measured interval is used for differencing |
+| Interface                    | Purpose                                  | Contract                                                  |
+|------------------------------|------------------------------------------|-----------------------------------------------------------|
+| Driver configuration channel | Write and read back driver configuration | Read-back mismatch is a fatal startup condition           |
+| Bridge control outputs       | Duty and direction per bridge            | Switching frequency above the audible band                |
+| Driver fault input           | Observe the driver's fault assertion     | Observable without polling the configuration channel      |
+| Encoder channel inputs       | A, B and index per wheel                 | Decoded without losing edges at maximum wheel speed       |
+| Timebase                     | Velocity differencing interval           | Monotonic; the measured interval is used for differencing |
 
 ---
 
 ## Data Model
 
-| Entity | Field | Type / Unit | Range | Notes |
-|--------|-------|-------------|-------|-------|
-| Command | effortLeft, effortRight | normalised effort | -1.0 to 1.0 | Sign selects direction |
-| Command | disableState | enumeration | Coast, Brake | Safety paths use Coast exclusively |
-| Wheel measurement | position | encoder counts | full signed range | Accumulated across hardware wrap |
-| Wheel measurement | angularVelocity | radians per second | -105 to 105 | Differenced over the measured interval |
-| Chassis motion | forwardVelocity | metres per second | -1.5 to 1.5 | Mean of both wheels times wheel radius |
-| Chassis motion | yawRate | radians per second | -3.1 to 3.1 | Wheel difference times radius over track width |
-| Geometry | wheelRadius | metres | fitted value | Documented in one place only |
-| Geometry | trackWidth | metres | fitted value | Distance between wheel contact patches |
-| Geometry | countsPerRevolution | counts | fitted value | Four times the encoder line count |
-| Configuration | currentLimit | amperes | at or below the motor continuous rating | Verified by read-back |
-| Configuration | switchingFrequency | kilohertz | above 20 | Above the audible band |
+| Entity            | Field                   | Type / Unit        | Range                                   | Notes                                          |
+|-------------------|-------------------------|--------------------|-----------------------------------------|------------------------------------------------|
+| Command           | effortLeft, effortRight | normalised effort  | -1.0 to 1.0                             | Sign selects direction                         |
+| Command           | disableState            | enumeration        | Coast, Brake                            | Safety paths use Coast exclusively             |
+| Wheel measurement | position                | encoder counts     | full signed range                       | Accumulated across hardware wrap               |
+| Wheel measurement | angularVelocity         | radians per second | -105 to 105                             | Differenced over the measured interval         |
+| Chassis motion    | forwardVelocity         | metres per second  | -1.5 to 1.5                             | Mean of both wheels times wheel radius         |
+| Chassis motion    | yawRate                 | radians per second | -3.1 to 3.1                             | Wheel difference times radius over track width |
+| Geometry          | wheelRadius             | metres             | fitted value                            | Documented in one place only                   |
+| Geometry          | trackWidth              | metres             | fitted value                            | Distance between wheel contact patches         |
+| Geometry          | countsPerRevolution     | counts             | fitted value                            | Four times the encoder line count              |
+| Configuration     | currentLimit            | amperes            | at or below the motor continuous rating | Verified by read-back                          |
+| Configuration     | switchingFrequency      | kilohertz          | above 20                                | Above the audible band                         |
 
 ---
 
@@ -227,25 +227,25 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint | Value / Description |
-|------------|---------------------|
-| Coast reachability | Coasting must not depend on the control loop, the estimator or the link |
-| Configuration trust | An unverifiable driver configuration prevents startup rather than degrading operation |
-| Switching frequency | Above 20 kHz and compatible with the motor electrical time constant |
-| Current limit | At or below the continuous rating of the fitted motors |
-| Open-loop torque | Effort maps to duty, not to current. Torque per unit effort varies with battery voltage and motor speed; the balance loops absorb this |
-| No battery compensation | A discharging battery reduces the effort actually delivered; not compensated in this revision |
-| Index is advisory | The index channel never corrects the incremental count, so absolute wheel angle is not established by this component |
-| Slip is invisible | Odometry measures wheel rotation, not ground motion. A slipping wheel reports travel that did not happen |
+| Constraint              | Value / Description                                                                                                                    |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Coast reachability      | Coasting must not depend on the control loop, the estimator or the link                                                                |
+| Configuration trust     | An unverifiable driver configuration prevents startup rather than degrading operation                                                  |
+| Switching frequency     | Above 20 kHz and compatible with the motor electrical time constant                                                                    |
+| Current limit           | At or below the continuous rating of the fitted motors                                                                                 |
+| Open-loop torque        | Effort maps to duty, not to current. Torque per unit effort varies with battery voltage and motor speed; the balance loops absorb this |
+| No battery compensation | A discharging battery reduces the effort actually delivered; not compensated in this revision                                          |
+| Index is advisory       | The index channel never corrects the incremental count, so absolute wheel angle is not established by this component                   |
+| Slip is invisible       | Odometry measures wheel rotation, not ground motion. A slipping wheel reports travel that did not happen                               |
 
 ---
 
 ## Open Questions
 
-| # | Question | Options | Status |
-|---|----------|---------|--------|
-| 1 | Is quadrature decoded by hardware timers or in software on edge interrupts? | Hardware timer per wheel; software edge counting | open |
-| 2 | Should effort compensate for measured battery voltage so torque per unit effort stays constant as the battery drains? | Leave to the balance loops; add feed-forward compensation | open |
-| 3 | Fast or slow current decay mode for the bridges? | Depends on measured current ripple against motor inductance | open |
-| 4 | Should wheel velocity be differenced per control period or filtered over several? | Per period, accepting quantisation noise; short moving filter, accepting lag | open |
-| 5 | Should the driver's current regulation be relied upon, or a separate measurement taken? | Rely on the driver; add sensing for telemetry and stall detection | open |
+| # | Question                                                                                                              | Options                                                                      | Status |
+|---|-----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------|
+| 1 | Is quadrature decoded by hardware timers or in software on edge interrupts?                                           | Hardware timer per wheel; software edge counting                             | open   |
+| 2 | Should effort compensate for measured battery voltage so torque per unit effort stays constant as the battery drains? | Leave to the balance loops; add feed-forward compensation                    | open   |
+| 3 | Fast or slow current decay mode for the bridges?                                                                      | Depends on measured current ripple against motor inductance                  | open   |
+| 4 | Should wheel velocity be differenced per control period or filtered over several?                                     | Per period, accepting quantisation noise; short moving filter, accepting lag | open   |
+| 5 | Should the driver's current regulation be relied upon, or a separate measurement taken?                               | Rely on the driver; add sensing for telemetry and stall detection            | open   |

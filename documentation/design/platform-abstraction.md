@@ -98,38 +98,38 @@ them.
 
 ### Provided
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Inertial measurement role | Body-frame angular rate and acceleration | Fixed axis convention; failure and staleness reported explicitly, never substituted |
-| Wheel encoder role | Signed counts and index events for both wheels | Lossless across counter wrap; forward motion positive on both wheels |
-| Motor bridge role | Signed effort per motor, plus coast and brake | Coast reachable without a healthy control loop |
-| Driver configuration role | Write and read back driver configuration, observe the fault line | Read-back is supported; the fault line is observable without polling configuration |
-| Bluetooth peripheral role | Advertising, connection, pairing, GATT database | Connection loss observable to the application |
-| Parameter store role | Persist and retrieve tuning parameters | Absence or failure is reported so the application can fall back to defaults |
-| Timebase role | Periodic scheduling and interval measurement | Monotonic; reports the measured interval |
-| Status indicator role | Visible heartbeat and mode indication | Never on a timing-critical path |
-| Trace role | Diagnostic text output | May be a no-op on a board without a channel; never blocks the control loop |
-| Event loop | Hand control to the platform's scheduler | Does not return on the target |
+| Interface                 | Purpose                                                          | Contract                                                                            |
+|---------------------------|------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Inertial measurement role | Body-frame angular rate and acceleration                         | Fixed axis convention; failure and staleness reported explicitly, never substituted |
+| Wheel encoder role        | Signed counts and index events for both wheels                   | Lossless across counter wrap; forward motion positive on both wheels                |
+| Motor bridge role         | Signed effort per motor, plus coast and brake                    | Coast reachable without a healthy control loop                                      |
+| Driver configuration role | Write and read back driver configuration, observe the fault line | Read-back is supported; the fault line is observable without polling configuration  |
+| Bluetooth peripheral role | Advertising, connection, pairing, GATT database                  | Connection loss observable to the application                                       |
+| Parameter store role      | Persist and retrieve tuning parameters                           | Absence or failure is reported so the application can fall back to defaults         |
+| Timebase role             | Periodic scheduling and interval measurement                     | Monotonic; reports the measured interval                                            |
+| Status indicator role     | Visible heartbeat and mode indication                            | Never on a timing-critical path                                                     |
+| Trace role                | Diagnostic text output                                           | May be a no-op on a board without a channel; never blocks the control loop          |
+| Event loop                | Hand control to the platform's scheduler                         | Does not return on the target                                                       |
 
 ### Required
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
+| Interface         | Purpose                              | Contract                                                              |
+|-------------------|--------------------------------------|-----------------------------------------------------------------------|
 | Board peripherals | Whatever the concrete board provides | Supplied by each board implementation; not visible to the application |
 
 ---
 
 ## Data Model
 
-| Entity | Field | Type / Unit | Range | Notes |
-|--------|-------|-------------|-------|-------|
-| Inertial sample | angularRate | radians per second, three axes | part-dependent | Body frame, fixed convention |
-| Inertial sample | acceleration | metres per second squared, three axes | part-dependent | Body frame, fixed convention |
-| Inertial sample | valid | boolean | true or false | False on transfer failure |
-| Encoder sample | counts | signed counts per wheel | full signed range | Accumulated across wrap |
-| Encoder sample | indexSeen | boolean per wheel | true or false | Advisory; never resets counts |
-| Effort command | value | normalised effort | -1.0 to 1.0 | Sign selects direction |
-| Timebase | interval | microseconds | monotonic | Measured, not nominal |
+| Entity          | Field        | Type / Unit                           | Range             | Notes                         |
+|-----------------|--------------|---------------------------------------|-------------------|-------------------------------|
+| Inertial sample | angularRate  | radians per second, three axes        | part-dependent    | Body frame, fixed convention  |
+| Inertial sample | acceleration | metres per second squared, three axes | part-dependent    | Body frame, fixed convention  |
+| Inertial sample | valid        | boolean                               | true or false     | False on transfer failure     |
+| Encoder sample  | counts       | signed counts per wheel               | full signed range | Accumulated across wrap       |
+| Encoder sample  | indexSeen    | boolean per wheel                     | true or false     | Advisory; never resets counts |
+| Effort command  | value        | normalised effort                     | -1.0 to 1.0       | Sign selects direction        |
+| Timebase        | interval     | microseconds                          | monotonic         | Measured, not nominal         |
 
 ---
 
@@ -204,23 +204,23 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint | Value / Description |
-|------------|---------------------|
-| No allocation | Roles are constructed once at startup; no allocation after that |
-| No global state | Dependencies are injected at construction; nothing is looked up globally |
-| Conventions are binding | Axis orientation, wheel sign and effort normalisation are part of the contract, not per-board choices |
-| Capability, not parts | A role exists only if more than one board could plausibly provide it |
-| Timing is explicit | Roles with real-time obligations state them; the abstraction does not hide latency |
-| Host fidelity | The host board can reproduce interfaces and timing, but not analogue reality. Passing on the host is necessary, never sufficient |
-| Scaffold roles retained | The status indicator, serial channel and tracer remain until the robot's own components replace the worked example |
+| Constraint              | Value / Description                                                                                                              |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| No allocation           | Roles are constructed once at startup; no allocation after that                                                                  |
+| No global state         | Dependencies are injected at construction; nothing is looked up globally                                                         |
+| Conventions are binding | Axis orientation, wheel sign and effort normalisation are part of the contract, not per-board choices                            |
+| Capability, not parts   | A role exists only if more than one board could plausibly provide it                                                             |
+| Timing is explicit      | Roles with real-time obligations state them; the abstraction does not hide latency                                               |
+| Host fidelity           | The host board can reproduce interfaces and timing, but not analogue reality. Passing on the host is necessary, never sufficient |
+| Scaffold roles retained | The status indicator, serial channel and tracer remain until the robot's own components replace the worked example               |
 
 ---
 
 ## Open Questions
 
-| # | Question | Options | Status |
-|---|----------|---------|--------|
-| 1 | Does the inertial role expose raw samples or a configured sample rate the board owns? | Application-driven polling; board-driven sample callback | open |
-| 2 | Should the simulated plant live behind the host board or beside it as a separate tool? | Behind the host board; separate simulator composed at the entry point | open |
-| 3 | Is the parameter store a distinct role or part of the board's general configuration? | Distinct role; folded into board configuration | open |
-| 4 | Should a second board be defined now to prove the abstraction is not shaped by one part? | Defer until the first board works; define early as a design check | open |
+| # | Question                                                                                 | Options                                                               | Status |
+|---|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|--------|
+| 1 | Does the inertial role expose raw samples or a configured sample rate the board owns?    | Application-driven polling; board-driven sample callback              | open   |
+| 2 | Should the simulated plant live behind the host board or beside it as a separate tool?   | Behind the host board; separate simulator composed at the entry point | open   |
+| 3 | Is the parameter store a distinct role or part of the board's general configuration?     | Distinct role; folded into board configuration                        | open   |
+| 4 | Should a second board be defined now to prove the abstraction is not shaped by one part? | Defer until the first board works; define early as a design check     | open   |

@@ -43,25 +43,25 @@ one file at a time; nothing here needs to move all at once.
 
 ## Actors
 
-| Actor | Description |
-|-------|-------------|
-| Operator | The person driving the robot, acting through a BLE client application |
-| BLE client | The host application that connects, pairs, sends commands and renders telemetry |
-| Robot | The firmware under specification |
+| Actor       | Description                                                                      |
+|-------------|----------------------------------------------------------------------------------|
+| Operator    | The person driving the robot, acting through a BLE client application            |
+| BLE client  | The host application that connects, pairs, sends commands and renders telemetry  |
+| Robot       | The firmware under specification                                                 |
 | Environment | Ground surface, disturbances and the physical handling the robot is subjected to |
 
 ---
 
 ## Use cases
 
-| # | Use case | Actor | Precondition | Main flow | Alternate flows | File |
-|---|----------|-------|--------------|-----------|-----------------|------|
-| UC-1 | Bring the robot into service | Operator | Robot powered off, held still | Power on, self-test, calibrate gyroscope bias, settle in IDLE | Sensor absent, or robot moved during calibration | `startup-and-calibration.feature` |
-| UC-2 | Measure attitude and wheel motion | Robot | Calibration complete | Sample the IMU, fuse into pitch and pitch rate, decode both encoders | Sensor stale or transfer failed; counter wrap | `sensing-and-odometry.feature` |
-| UC-3 | Balance and follow motion commands | Operator | Robot in IDLE, upright | Arm, hold upright, track velocity and yaw setpoints | Arm refused when tilted; disturbance; actuator saturation | `balancing.feature` |
-| UC-4 | Shut down safely | Robot | Robot ARMED | Detect fall, driver fault, invalid estimate or stalled loop; coast the motors; latch FAULT | Recoverable tilt does not trip; clear-fault then explicit re-arm | `safety.feature` |
-| UC-5 | Drive the robot remotely | Operator | Robot advertising | Connect, pair, arm, write velocity and yaw setpoints | Second client refused; unpaired write refused; command timeout; link lost | `teleoperation.feature` |
-| UC-6 | Observe and tune | Operator | Paired client connected | Subscribe to telemetry; read the active strategy and its parameter descriptor; write parameters | Strategy change or parameter write refused while ARMED; out-of-range write refused; congested link | `telemetry-and-tuning.feature` |
+| #    | Use case                           | Actor    | Precondition                  | Main flow                                                                                       | Alternate flows                                                                                    | File                              |
+|------|------------------------------------|----------|-------------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|-----------------------------------|
+| UC-1 | Bring the robot into service       | Operator | Robot powered off, held still | Power on, self-test, calibrate gyroscope bias, settle in IDLE                                   | Sensor absent, or robot moved during calibration                                                   | `startup-and-calibration.feature` |
+| UC-2 | Measure attitude and wheel motion  | Robot    | Calibration complete          | Sample the IMU, fuse into pitch and pitch rate, decode both encoders                            | Sensor stale or transfer failed; counter wrap                                                      | `sensing-and-odometry.feature`    |
+| UC-3 | Balance and follow motion commands | Operator | Robot in IDLE, upright        | Arm, hold upright, track velocity and yaw setpoints                                             | Arm refused when tilted; disturbance; actuator saturation                                          | `balancing.feature`               |
+| UC-4 | Shut down safely                   | Robot    | Robot ARMED                   | Detect fall, driver fault, invalid estimate or stalled loop; coast the motors; latch FAULT      | Recoverable tilt does not trip; clear-fault then explicit re-arm                                   | `safety.feature`                  |
+| UC-5 | Drive the robot remotely           | Operator | Robot advertising             | Connect, pair, arm, write velocity and yaw setpoints                                            | Second client refused; unpaired write refused; command timeout; link lost                          | `teleoperation.feature`           |
+| UC-6 | Observe and tune                   | Operator | Paired client connected       | Subscribe to telemetry; read the active strategy and its parameter descriptor; write parameters | Strategy change or parameter write refused while ARMED; out-of-range write refused; congested link | `telemetry-and-tuning.feature`    |
 
 ---
 

@@ -51,26 +51,26 @@ Newtonian rigid-body mechanics, linearisation of a nonlinear system about an equ
 and state-space notation. Familiarity with poles of a linear system and what a
 right-half-plane pole implies.
 
-| Symbol | Meaning | Unit |
-|--------|---------|------|
-| $\theta$ | Body pitch angle from vertical, positive nose-up | rad |
-| $\dot{\theta}$ | Body pitch rate | rad/s |
-| $x$ | Horizontal position of the wheel axle | m |
-| $\dot{x}$ | Forward velocity of the chassis | m/s |
-| $\psi$ | Chassis yaw angle | rad |
-| $\dot{\psi}$ | Chassis yaw rate | rad/s |
-| $m$ | Body mass (everything above the axle) | kg |
-| $M$ | Combined mass of both wheels and rotors | kg |
-| $\ell$ | Distance from the wheel axle to the body centre of mass | m |
-| $J$ | Body moment of inertia about the axle | kg·m² |
-| $J_w$ | Moment of inertia of one wheel about its axis | kg·m² |
-| $r$ | Wheel radius | m |
-| $b$ | Track width between wheel contact patches | m |
-| $\tau_L,\ \tau_R$ | Torque applied to the left and right wheels | N·m |
-| $\tau_c$ | Common-mode wheel torque, $\tau_L + \tau_R$ | N·m |
-| $\tau_d$ | Differential wheel torque, $\tau_L - \tau_R$ | N·m |
-| $g$ | Gravitational acceleration, 9.81 | m/s² |
-| $\tau$ | Fall time constant | s |
+| Symbol            | Meaning                                                 | Unit  |
+|-------------------|---------------------------------------------------------|-------|
+| $\theta$          | Body pitch angle from vertical, positive nose-up        | rad   |
+| $\dot{\theta}$    | Body pitch rate                                         | rad/s |
+| $x$               | Horizontal position of the wheel axle                   | m     |
+| $\dot{x}$         | Forward velocity of the chassis                         | m/s   |
+| $\psi$            | Chassis yaw angle                                       | rad   |
+| $\dot{\psi}$      | Chassis yaw rate                                        | rad/s |
+| $m$               | Body mass (everything above the axle)                   | kg    |
+| $M$               | Combined mass of both wheels and rotors                 | kg    |
+| $\ell$            | Distance from the wheel axle to the body centre of mass | m     |
+| $J$               | Body moment of inertia about the axle                   | kg·m² |
+| $J_w$             | Moment of inertia of one wheel about its axis           | kg·m² |
+| $r$               | Wheel radius                                            | m     |
+| $b$               | Track width between wheel contact patches               | m     |
+| $\tau_L,\ \tau_R$ | Torque applied to the left and right wheels             | N·m   |
+| $\tau_c$          | Common-mode wheel torque, $\tau_L + \tau_R$             | N·m   |
+| $\tau_d$          | Differential wheel torque, $\tau_L - \tau_R$            | N·m   |
+| $g$               | Gravitational acceleration, 9.81                        | m/s²  |
+| $\tau$            | Fall time constant                                      | s     |
 
 ---
 
@@ -239,12 +239,12 @@ it is what makes the plant unstable.
 
 ## Numerical Properties
 
-| Property   | Value / Condition |
-|------------|-------------------|
+| Property   | Value / Condition                                                                                                                                    |
+|------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Complexity | Linearised model is 4 states and 1 input for pitch and position, plus 2 states for yaw. Evaluating the dynamics is a handful of multiply-accumulates |
-| Precision | Single-precision floating point is sufficient; $\Delta$ is well away from zero for realisable parameters, so the inversion is well conditioned |
-| Stability | Open-loop **unstable**: one real pole at $+1/\tau$. Marginally stable in $x$ (double integrator). Yaw is a double integrator |
-| Range | Linearisation holds to roughly 15°; at 35° the small-angle error in $\sin\theta$ exceeds 6% and the model is no longer trustworthy |
+| Precision  | Single-precision floating point is sufficient; $\Delta$ is well away from zero for realisable parameters, so the inversion is well conditioned       |
+| Stability  | Open-loop **unstable**: one real pole at $+1/\tau$. Marginally stable in $x$ (double integrator). Yaw is a double integrator                         |
+| Range      | Linearisation holds to roughly 15°; at 35° the small-angle error in $\sin\theta$ exceeds 6% and the model is no longer trustworthy                   |
 
 **Sensitivities.** The fall time constant $\tau$ depends on $\ell$ and $J$, and is what every
 timing budget derives from. A taller robot — larger $\ell$ and larger $J$ — falls *more

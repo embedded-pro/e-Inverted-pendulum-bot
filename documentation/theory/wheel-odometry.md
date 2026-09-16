@@ -54,23 +54,23 @@ constrains the whole odometry design.
 Quadrature signal encoding, modular arithmetic for counter wrap-around, finite differences,
 uniform quantisation noise, and differential-drive kinematics.
 
-| Symbol | Meaning | Unit |
-|--------|---------|------|
-| $A,\ B$ | Encoder quadrature channels, 90° apart | — |
-| $Z$ | Index channel, one pulse per revolution | — |
-| $N_{\text{line}}$ | Encoder lines per revolution | counts |
-| $N_{\text{eff}}$ | Effective counts per revolution after decoding | counts |
-| $c$ | Accumulated signed encoder count | counts |
-| $\phi$ | Wheel angular position | rad |
-| $\omega_L,\ \omega_R$ | Left and right wheel angular velocity | rad/s |
-| $v$ | Chassis forward velocity | m/s |
-| $\dot{\psi}$ | Chassis yaw rate | rad/s |
-| $r$ | Wheel radius | m |
-| $b$ | Track width between contact patches | m |
-| $\Delta t$ | Sampling interval | s |
-| $G$ | Gear ratio, motor to wheel | — |
-| $C_{\max}$ | Hardware counter modulus | counts |
-| $\sigma_\omega$ | Velocity quantisation noise | rad/s |
+| Symbol                | Meaning                                        | Unit   |
+|-----------------------|------------------------------------------------|--------|
+| $A,\ B$               | Encoder quadrature channels, 90° apart         | —      |
+| $Z$                   | Index channel, one pulse per revolution        | —      |
+| $N_{\text{line}}$     | Encoder lines per revolution                   | counts |
+| $N_{\text{eff}}$      | Effective counts per revolution after decoding | counts |
+| $c$                   | Accumulated signed encoder count               | counts |
+| $\phi$                | Wheel angular position                         | rad    |
+| $\omega_L,\ \omega_R$ | Left and right wheel angular velocity          | rad/s  |
+| $v$                   | Chassis forward velocity                       | m/s    |
+| $\dot{\psi}$          | Chassis yaw rate                               | rad/s  |
+| $r$                   | Wheel radius                                   | m      |
+| $b$                   | Track width between contact patches            | m      |
+| $\Delta t$            | Sampling interval                              | s      |
+| $G$                   | Gear ratio, motor to wheel                     | —      |
+| $C_{\max}$            | Hardware counter modulus                       | counts |
+| $\sigma_\omega$       | Velocity quantisation noise                    | rad/s  |
 
 ---
 
@@ -119,11 +119,11 @@ directly reduces the quantisation noise derived in Step 5, which is why it is sp
 increment. Writing the state as $s = 2A + B$, the increment is a lookup on $(s_{k-1}, s_k)$:
 
 | Previous → current | 00 | 01 | 11 | 10 |
-|---|---|---|---|---|
-| **00** | 0 | +1 | ✗ | −1 |
-| **01** | −1 | 0 | +1 | ✗ |
-| **11** | ✗ | −1 | 0 | +1 |
-| **10** | +1 | ✗ | −1 | 0 |
+|--------------------|----|----|----|----|
+| **00**             | 0  | +1 | ✗  | −1 |
+| **01**             | −1 | 0  | +1 | ✗  |
+| **11**             | ✗  | −1 | 0  | +1 |
+| **10**             | +1 | ✗  | −1 | 0  |
 
 The ✗ entries are the impossible double-bit transitions. They indicate that edges were missed
 — the wheel is turning faster than the decoder can follow — and must be treated as an error
@@ -251,12 +251,12 @@ Geometry, viewed from above:
 
 ## Numerical Properties
 
-| Property   | Value / Condition |
-|------------|-------------------|
+| Property   | Value / Condition                                                                                                                                                   |
+|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Complexity | Decoding is a table lookup per edge. Per control iteration: one modular subtraction, one multiply and a small filter per wheel — negligible against a 500 Hz budget |
-| Precision | Position is exact in integer counts, with no accumulated rounding. Velocity is quantised at $\sigma_\omega$ and is the only lossy step |
-| Stability | Position accumulation is exact and drift-free. Velocity estimation is unconditionally stable; filtering adds a single well-behaved pole |
-| Range | Bounded above by the maximum decodable edge rate $N_{\text{eff}}\,G\,\omega_{\max}/2\pi$; beyond it edges are missed and the impossible-transition check fires |
+| Precision  | Position is exact in integer counts, with no accumulated rounding. Velocity is quantised at $\sigma_\omega$ and is the only lossy step                              |
+| Stability  | Position accumulation is exact and drift-free. Velocity estimation is unconditionally stable; filtering adds a single well-behaved pole                             |
+| Range      | Bounded above by the maximum decodable edge rate $N_{\text{eff}}\,G\,\omega_{\max}/2\pi$; beyond it edges are missed and the impossible-transition check fires      |
 
 **Sensitivities.** The dominant sensitivity is to $N_{\text{eff}}\Delta t$, the product that
 sets velocity noise. Encoder resolution and differencing interval are interchangeable in this

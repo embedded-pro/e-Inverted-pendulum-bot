@@ -7,10 +7,10 @@ toc-title: Table of Contents
 
 # Requirements Specification
 
-| Field | Value |
-|-------|-------|
-| Project | inverted-pendulum-bot |
-| Status | Draft |
+| Field     | Value                    |
+|-----------|--------------------------|
+| Project   | inverted-pendulum-bot    |
+| Status    | Draft                    |
 | Generated | Auto-generated from YAML |
 
 > **Note:** Do not edit manually --- modify YAML files in `documentation/requirements/`

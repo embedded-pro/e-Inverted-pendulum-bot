@@ -93,33 +93,33 @@ invalid as unsafe rather than as a hint.
 
 ### Provided
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
-| Attitude estimate | Pitch angle and pitch rate | Produced on every inertial sample; always accompanied by a validity indication |
-| Estimate validity | Whether the estimate may be acted upon | Invalid whenever inputs are stale or failed, calibration is incomplete, or the filter has not converged |
-| Calibration control | Begin bias calibration and report its outcome | Reports success or failure; failure leaves the previous bias unchanged and the estimate invalid |
+| Interface           | Purpose                                       | Contract                                                                                                |
+|---------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| Attitude estimate   | Pitch angle and pitch rate                    | Produced on every inertial sample; always accompanied by a validity indication                          |
+| Estimate validity   | Whether the estimate may be acted upon        | Invalid whenever inputs are stale or failed, calibration is incomplete, or the filter has not converged |
+| Calibration control | Begin bias calibration and report its outcome | Reports success or failure; failure leaves the previous bias unchanged and the estimate invalid         |
 
 ### Required
 
-| Interface | Purpose | Contract |
-|-----------|---------|----------|
+| Interface            | Purpose                                         | Contract                                                                      |
+|----------------------|-------------------------------------------------|-------------------------------------------------------------------------------|
 | Inertial measurement | Angular rate and acceleration in the body frame | Fixed axis convention; staleness and transfer failure are reported explicitly |
-| Timebase | Integration interval between samples | Monotonic; the actual interval is used rather than the nominal one |
+| Timebase             | Integration interval between samples            | Monotonic; the actual interval is used rather than the nominal one            |
 
 ---
 
 ## Data Model
 
-| Entity | Field | Type / Unit | Range | Notes |
-|--------|-------|-------------|-------|-------|
-| Estimate | pitch | radians | -1.57 to 1.57 | Relative to upright, positive nose-up |
-| Estimate | pitchRate | radians per second | -8.7 to 8.7 | Bias-corrected |
-| Estimate | valid | boolean | true or false | False means unusable, not merely degraded |
-| Calibration | gyroBias | radians per second | -0.17 to 0.17 | One value per axis, re-estimated each power-on |
-| Calibration | windowDuration | milliseconds | 500 to 2000 | Averaging window for the bias estimate |
-| Calibration | stillnessThreshold | radians per second | strategy-defined | Exceeding it during the window fails calibration |
-| Filter | crossoverInterval | seconds | 0.2 to 2.0 | Boundary between trusting the gyroscope and the accelerometer |
-| Filter | convergenceInterval | milliseconds | up to 1000 | Estimate is invalid until this has elapsed |
+| Entity      | Field               | Type / Unit        | Range            | Notes                                                         |
+|-------------|---------------------|--------------------|------------------|---------------------------------------------------------------|
+| Estimate    | pitch               | radians            | -1.57 to 1.57    | Relative to upright, positive nose-up                         |
+| Estimate    | pitchRate           | radians per second | -8.7 to 8.7      | Bias-corrected                                                |
+| Estimate    | valid               | boolean            | true or false    | False means unusable, not merely degraded                     |
+| Calibration | gyroBias            | radians per second | -0.17 to 0.17    | One value per axis, re-estimated each power-on                |
+| Calibration | windowDuration      | milliseconds       | 500 to 2000      | Averaging window for the bias estimate                        |
+| Calibration | stillnessThreshold  | radians per second | strategy-defined | Exceeding it during the window fails calibration              |
+| Filter      | crossoverInterval   | seconds            | 0.2 to 2.0       | Boundary between trusting the gyroscope and the accelerometer |
+| Filter      | convergenceInterval | milliseconds       | up to 1000       | Estimate is invalid until this has elapsed                    |
 
 ---
 
@@ -199,23 +199,23 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint | Value / Description |
-|------------|---------------------|
-| Drift budget | No more than 1 degree over 60 seconds stationary and upright |
-| Convergence | Within 1 degree of the true inclination inside 1 second of calibration completing |
-| Update rate | One estimate per inertial sample, at least 500 per second |
-| Single axis | Only pitch is estimated. Roll and yaw attitude are not; yaw *rate* comes from odometry, not from this component |
-| Sustained acceleration | Plausibility weighting handles transients. A long, steady acceleration is indistinguishable from a tilt and will bias the estimate |
-| Temperature | Bias is estimated once per power-on and not tracked thereafter; a large temperature excursion during a session degrades the estimate |
-| Vibration | Strong structural vibration raises accelerometer noise and effectively pushes the crossover; not compensated |
+| Constraint             | Value / Description                                                                                                                  |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| Drift budget           | No more than 1 degree over 60 seconds stationary and upright                                                                         |
+| Convergence            | Within 1 degree of the true inclination inside 1 second of calibration completing                                                    |
+| Update rate            | One estimate per inertial sample, at least 500 per second                                                                            |
+| Single axis            | Only pitch is estimated. Roll and yaw attitude are not; yaw *rate* comes from odometry, not from this component                      |
+| Sustained acceleration | Plausibility weighting handles transients. A long, steady acceleration is indistinguishable from a tilt and will bias the estimate   |
+| Temperature            | Bias is estimated once per power-on and not tracked thereafter; a large temperature excursion during a session degrades the estimate |
+| Vibration              | Strong structural vibration raises accelerometer noise and effectively pushes the crossover; not compensated                         |
 
 ---
 
 ## Open Questions
 
-| # | Question | Options | Status |
-|---|----------|---------|--------|
-| 1 | Complementary filter or single-axis Kalman filter? | Complementary — fewer cycles, one tuning constant; Kalman — principled weighting, tracks bias online | open |
-| 2 | Should gyroscope bias be tracked continuously rather than fixed at calibration? | Fixed per power-on; online estimation as part of a Kalman formulation | open |
-| 3 | Which inertial part is fitted, and does a separate accelerometer and gyroscope pair change the sampling design? | MPU6050 single part; LSM303 plus L3GD20 pair | open |
-| 4 | Should calibration be rejected outright if the robot is not near upright, not merely if it is moving? | Stillness only; also require near-upright | open |
+| # | Question                                                                                                        | Options                                                                                              | Status |
+|---|-----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|--------|
+| 1 | Complementary filter or single-axis Kalman filter?                                                              | Complementary — fewer cycles, one tuning constant; Kalman — principled weighting, tracks bias online | open   |
+| 2 | Should gyroscope bias be tracked continuously rather than fixed at calibration?                                 | Fixed per power-on; online estimation as part of a Kalman formulation                                | open   |
+| 3 | Which inertial part is fitted, and does a separate accelerometer and gyroscope pair change the sampling design? | MPU6050 single part; LSM303 plus L3GD20 pair                                                         | open   |
+| 4 | Should calibration be rejected outright if the robot is not near upright, not merely if it is moving?           | Stillness only; also require near-upright                                                            | open   |

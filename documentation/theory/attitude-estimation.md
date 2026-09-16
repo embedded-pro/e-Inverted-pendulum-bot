@@ -7,14 +7,14 @@ component: "attitude-estimation"
 date: 2026-09-16
 ---
 
-| Field     | Value                                     |
-|-----------|-------------------------------------------|
+| Field     | Value                                       |
+|-----------|---------------------------------------------|
 | Title     | Pitch Estimation from Inertial Measurements |
-| Type      | theory                                    |
-| Status    | draft                                     |
-| Version   | 0.1.0                                     |
-| Component | attitude-estimation                       |
-| Date      | 2026-09-16                                |
+| Type      | theory                                      |
+| Status    | draft                                       |
+| Version   | 0.1.0                                       |
+| Component | attitude-estimation                         |
+| Date      | 2026-09-16                                  |
 
 > Why neither inertial sensor can measure pitch on its own, and how combining them produces
 > an estimate good enough to balance on.
@@ -54,24 +54,24 @@ the choice between them remains open.
 Rigid-body kinematics, first-order low-pass and high-pass filtering, random-walk noise
 processes, and the discrete Kalman filter.
 
-| Symbol | Meaning | Unit |
-|--------|---------|------|
-| $\theta$ | True body pitch from vertical | rad |
-| $\hat{\theta}$ | Estimated body pitch | rad |
-| $\theta_a$ | Pitch inferred from the accelerometer alone | rad |
-| $\omega$ | Measured angular rate about the pitch axis | rad/s |
-| $b$ | Gyroscope bias | rad/s |
-| $\hat{b}$ | Estimated gyroscope bias | rad/s |
-| $n_\omega$ | Gyroscope white noise | rad/s |
-| $n_a$ | Accelerometer noise, including vibration | m/s² |
-| $a_x,\ a_z$ | Measured specific force along the body x and z axes | m/s² |
-| $\Delta t$ | Sampling interval | s |
-| $\tau_c$ | Complementary filter crossover time constant | s |
-| $\lambda$ | Complementary filter coefficient | — |
-| $\mathbf{x}$ | Kalman state $[\theta,\ b]^{\top}$ | mixed |
-| $P$ | Kalman state covariance | — |
-| $Q,\ R$ | Process and measurement noise covariances | — |
-| $K$ | Kalman gain | — |
+| Symbol         | Meaning                                             | Unit  |
+|----------------|-----------------------------------------------------|-------|
+| $\theta$       | True body pitch from vertical                       | rad   |
+| $\hat{\theta}$ | Estimated body pitch                                | rad   |
+| $\theta_a$     | Pitch inferred from the accelerometer alone         | rad   |
+| $\omega$       | Measured angular rate about the pitch axis          | rad/s |
+| $b$            | Gyroscope bias                                      | rad/s |
+| $\hat{b}$      | Estimated gyroscope bias                            | rad/s |
+| $n_\omega$     | Gyroscope white noise                               | rad/s |
+| $n_a$          | Accelerometer noise, including vibration            | m/s²  |
+| $a_x,\ a_z$    | Measured specific force along the body x and z axes | m/s²  |
+| $\Delta t$     | Sampling interval                                   | s     |
+| $\tau_c$       | Complementary filter crossover time constant        | s     |
+| $\lambda$      | Complementary filter coefficient                    | —     |
+| $\mathbf{x}$   | Kalman state $[\theta,\ b]^{\top}$                  | mixed |
+| $P$            | Kalman state covariance                             | —     |
+| $Q,\ R$        | Process and measurement noise covariances           | —     |
+| $K$            | Kalman gain                                         | —     |
 
 ---
 
@@ -267,13 +267,13 @@ The frequency split, drawn as magnitude against frequency:
 
 ## Numerical Properties
 
-| Property   | Value / Condition |
-|------------|-------------------|
-| Complexity | Complementary: one `atan2`, a handful of multiply-accumulates — a few hundred cycles on a Cortex-M4 with hardware floating point. Kalman: a 2×2 predict/update, roughly 50 operations plus one division; both fit a 500 Hz budget comfortably |
-| Precision | Single precision suffices for the angle. The integrated angle accumulates $\Delta t$ rounding over thousands of samples, but the accelerometer correction continuously re-anchors it, so error does not compound |
-| Stability | Complementary: unconditionally stable for $0 < \lambda < 1$; the single pole at $1/\tau_c$ is always in the left half plane. Kalman: stable provided $Q \succeq 0$ and $R > 0$, though $P$ can lose positive-definiteness through rounding if updated naively |
-| Range | `atan2` covers the full circle, but the estimate is only *useful* within the controller's valid envelope, roughly ±15° |
-| Convergence | From an accelerometer-initialised start, within 1° in under 1 s — satisfying `REQ-EST-004` |
+| Property    | Value / Condition                                                                                                                                                                                                                                             |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Complexity  | Complementary: one `atan2`, a handful of multiply-accumulates — a few hundred cycles on a Cortex-M4 with hardware floating point. Kalman: a 2×2 predict/update, roughly 50 operations plus one division; both fit a 500 Hz budget comfortably                 |
+| Precision   | Single precision suffices for the angle. The integrated angle accumulates $\Delta t$ rounding over thousands of samples, but the accelerometer correction continuously re-anchors it, so error does not compound                                              |
+| Stability   | Complementary: unconditionally stable for $0 < \lambda < 1$; the single pole at $1/\tau_c$ is always in the left half plane. Kalman: stable provided $Q \succeq 0$ and $R > 0$, though $P$ can lose positive-definiteness through rounding if updated naively |
+| Range       | `atan2` covers the full circle, but the estimate is only *useful* within the controller's valid envelope, roughly ±15°                                                                                                                                        |
+| Convergence | From an accelerometer-initialised start, within 1° in under 1 s — satisfying `REQ-EST-004`                                                                                                                                                                    |
 
 **Sensitivities.** The dominant one is **residual gyroscope bias**, which maps directly to
 steady-state error of roughly $\hat{b}\tau_c$. With $\tau_c = 0.5$ s, holding the 1°-per-60 s
