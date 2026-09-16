@@ -3,66 +3,66 @@ Feature: Remote teleoperation over Bluetooth Low Energy
   writing velocity and yaw-rate setpoints. The link is assumed unreliable: losing it
   must never drop the robot, and must never leave it running away on a stale command.
 
-  # REQ-LINK-001
+  @REQ-LINK-001
   Scenario: The robot advertises while unconnected
     Given the robot is in IDLE with no client connected
     When the advertising state is observed
     Then the robot is advertising a connectable service
 
-  # REQ-LINK-002
+  @REQ-LINK-002
   Scenario: The control service is exposed
     Given a client has connected to the robot
     When the client discovers the GATT database
     Then the robot control service is present
     And it exposes teleoperation, telemetry, tuning and mode-control characteristics
 
-  # REQ-LINK-003
+  @REQ-LINK-003
   Scenario: Only one operator at a time
     Given a client is already connected
     When a second client attempts to connect
     Then the second connection is refused
 
-  # REQ-LINK-003
+  @REQ-LINK-003
   Scenario: Advertising resumes after disconnection
     Given a client is connected
     When the client disconnects
     Then the robot resumes advertising
 
-  # REQ-LINK-008
+  @REQ-LINK-008
   Scenario: Unpaired clients cannot command motion
     Given a client has connected but has not paired
     When the client writes a motion command
     Then the write is rejected
     And the commanded setpoints are unchanged
 
-  # REQ-LINK-007
+  @REQ-LINK-007
   Scenario: The robot is armed over the link
     Given a paired client is connected
     And the robot is upright and in IDLE
     When the client issues an arm command
     Then the mode becomes ARMED
 
-  # REQ-LINK-004
+  @REQ-LINK-004
   Scenario: Motion setpoints are accepted
     Given a paired client is connected and the robot is ARMED
     When the client writes a forward velocity of 0.2 metres per second and a yaw rate of 30 degrees per second
     Then the commanded setpoints are applied
 
-  # REQ-LINK-004
+  @REQ-LINK-004
   Scenario: Out-of-range setpoints are refused rather than clamped
     Given a paired client is connected and the robot is ARMED
     When the client writes a forward velocity beyond the documented range
     Then the write is rejected
     And the previously commanded setpoints are unchanged
 
-  # REQ-LINK-005
+  @REQ-LINK-005
   Scenario: A silent operator stops the robot
     Given the robot is ARMED and driving forwards on operator command
     When no motion command is received for 500 milliseconds
     Then the commanded velocity and yaw-rate setpoints decay to zero
     And the robot continues to balance
 
-  # REQ-LINK-006
+  @REQ-LINK-006
   Scenario: Losing the link does not drop the robot
     Given the robot is ARMED and driving forwards on operator command
     When the client connection is lost

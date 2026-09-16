@@ -7,46 +7,46 @@ Feature: Safety supervision and shutdown
     Given the robot is calibrated
     And the robot is armed and balancing
 
-  # REQ-SAFE-002, REQ-SAFE-003
+  @REQ-SAFE-002 @REQ-SAFE-003
   Scenario: A fall disarms the drive
     When the body is tipped 40 degrees from upright
     Then the mode becomes FAULT within 20 milliseconds
     And both motor bridges coast
     And the bridges are not actively braked
 
-  # REQ-SAFE-002
+  @REQ-SAFE-002
   Scenario: A large but recoverable tilt does not trip the fall detector
     When the body is tipped 30 degrees from upright and released
     Then the mode remains ARMED
     And the robot returns upright
 
-  # REQ-SAFE-006, REQ-DRIVE-004
+  @REQ-SAFE-006 @REQ-DRIVE-004
   Scenario: A motor driver fault escalates to the supervisor
     When the motor driver asserts its fault output
     Then both motor bridges are disabled
     And the mode becomes FAULT
     And the reported fault cause identifies the motor driver
 
-  # REQ-SAFE-007
+  @REQ-SAFE-007
   Scenario: Losing the attitude estimate disarms the robot
     When the attitude estimate becomes invalid
     Then the mode becomes FAULT
     And both motor bridges coast
 
-  # REQ-SAFE-008
+  @REQ-SAFE-008
   Scenario: A stalled control loop is detected
     When the balance control loop is not serviced for 3 consecutive periods
     Then the mode becomes FAULT
     And both motor bridges coast
 
-  # REQ-SAFE-004
+  @REQ-SAFE-004
   Scenario: Faults latch after the cause has cleared
     Given the robot has entered FAULT after a fall
     When the body is returned to upright
     Then the mode remains FAULT
     And both motor bridges remain disabled
 
-  # REQ-SAFE-005
+  @REQ-SAFE-005
   Scenario: Recovery requires an explicit arm command
     Given the robot is in FAULT
     And the body is upright
@@ -54,13 +54,13 @@ Feature: Safety supervision and shutdown
     Then the mode becomes IDLE
     And the motors remain de-energised until an arm command is issued
 
-  # REQ-DRIVE-005
+  @REQ-DRIVE-005
   Scenario: Motor current is limited
     Given the motor driver has been configured
     When the configured per-motor current limit is read back
     Then it does not exceed the continuous current rating of the fitted motors
 
-  # REQ-DRIVE-006
+  @REQ-DRIVE-006
   Scenario: Both coast and brake are available, and safety uses coast
     Given the actuation component is available
     When a coasting disable and a braked disable are each requested
