@@ -1,0 +1,38 @@
+- id: REQ-SYS-001
+  title: Defined operating modes
+  shall: >
+    The system shall operate in exactly one of the modes INIT, CALIBRATING, IDLE,
+    ARMED and FAULT at any instant, and shall expose the active mode to the
+    connected client.
+
+- id: REQ-SYS-002
+  title: Power-on enters a non-driving mode
+  shall: >
+    On power-on or reset the system shall enter INIT with both motor bridges
+    disabled, and shall not energise any motor until the operator has explicitly
+    armed the system.
+
+- id: REQ-SYS-003
+  title: Self-test before becoming operable
+  shall: >
+    Before leaving INIT the system shall verify that the inertial sensor and the
+    motor driver respond to identification reads, and shall enter FAULT if either
+    check fails.
+
+- id: REQ-SYS-004
+  title: Explicit mode transitions
+  shall: >
+    The system shall change mode only in response to a defined trigger, and shall
+    reject any transition that is not permitted from the active mode.
+
+- id: REQ-SYS-005
+  title: Bounded startup time
+  shall: >
+    The system shall complete INIT and reach either CALIBRATING or FAULT within
+    2 seconds of power-on.
+
+- id: REQ-SYS-006
+  title: Firmware identification
+  shall: >
+    The system shall report a firmware version identifier and a build identifier
+    to a connected client on request.

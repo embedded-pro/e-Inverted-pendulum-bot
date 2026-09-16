@@ -1,0 +1,50 @@
+- id: REQ-LINK-001
+  title: Bluetooth Low Energy peripheral role
+  shall: >
+    The device shall operate as a Bluetooth Low Energy peripheral and shall
+    advertise a connectable service while not connected.
+
+- id: REQ-LINK-002
+  title: GATT server
+  shall: >
+    The device shall expose a GATT server carrying the robot control service, and
+    shall present teleoperation, telemetry, tuning and mode-control characteristics
+    within it.
+
+- id: REQ-LINK-003
+  title: Single operator connection
+  shall: >
+    The device shall accept at most one concurrent client connection, and shall
+    resume advertising after a disconnection.
+
+- id: REQ-LINK-004
+  title: Motion command reception
+  shall: >
+    The device shall accept a combined forward-velocity and yaw-rate setpoint from
+    the connected client, and shall reject values outside the documented range
+    rather than clamping them silently.
+
+- id: REQ-LINK-005
+  title: Teleoperation command timeout
+  shall: >
+    If no motion command is received for 500 milliseconds while ARMED, the system
+    shall decay the commanded velocity and yaw-rate setpoints to zero while
+    continuing to balance.
+
+- id: REQ-LINK-006
+  title: Disconnection does not drop the robot
+  shall: >
+    On losing the client connection while ARMED, the system shall zero the motion
+    setpoints and shall continue to balance in place rather than disarming.
+
+- id: REQ-LINK-007
+  title: Arming is a link-level command
+  shall: >
+    The device shall expose arm, disarm and clear-fault commands over the GATT
+    server, and shall apply the same preconditions to them as to any other source.
+
+- id: REQ-LINK-008
+  title: Link protection
+  shall: >
+    The device shall require pairing before accepting any characteristic write that
+    commands motion, changes mode, or modifies tuning parameters.

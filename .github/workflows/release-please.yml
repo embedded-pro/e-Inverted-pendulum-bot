@@ -139,7 +139,7 @@ jobs:
           output-dir: docs-pdf
           artifact-name: documentation-pdfs
           requirements-dir: documentation/requirements
-          features-dir: integration_tests/features
+          features-dir: documentation/use-cases
           matrix-output: docs-pdf/traceability-matrix.md
           matrix-pdf-output: docs-pdf/inverted_pendulum_bot-traceability-matrix-${{ needs.release_please.outputs.tag_name }}.pdf
 

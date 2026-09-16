@@ -1,0 +1,52 @@
+- id: REQ-RT-001
+  title: Balance loop period
+  shall: >
+    The estimation and balance control loop shall execute at 500 iterations per
+    second.
+
+- id: REQ-RT-002
+  title: Outer loop period
+  shall: >
+    The velocity and yaw setpoint loop shall execute at 50 iterations per second.
+
+- id: REQ-RT-003
+  title: Bounded loop jitter
+  shall: >
+    The start of each balance control iteration shall not deviate from its nominal
+    period by more than 10 percent of that period.
+
+- id: REQ-RT-004
+  title: Sensor to actuator latency
+  shall: >
+    The elapsed time from the acquisition of an inertial sample to the application
+    of the resulting effort command shall not exceed 3 milliseconds.
+
+- id: REQ-RT-005
+  title: Bounded execution of the control path
+  shall: >
+    Every operation on the balance control path shall complete in bounded time, and
+    shall contain no unbounded iteration and no recursion.
+
+- id: REQ-RES-001
+  title: No dynamic memory allocation
+  shall: >
+    Runtime code on the robot shall perform no dynamic memory allocation after
+    startup, and shall not depend on a heap being present.
+
+- id: REQ-RES-002
+  title: Bounded containers only
+  shall: >
+    All collections used by runtime code on the robot shall have a capacity fixed
+    at compile time.
+
+- id: REQ-RES-003
+  title: Bounded stack usage
+  shall: >
+    The worst-case stack depth of the firmware shall be determinable at build time
+    and shall fit within the memory budget of the target microcontroller.
+
+- id: REQ-RES-004
+  title: Portable application logic
+  shall: >
+    Application logic shall depend only on the platform abstraction interface, and
+    shall be executable on the host build without a microcontroller present.

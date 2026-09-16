@@ -1,0 +1,42 @@
+- id: REQ-TUNE-001
+  title: Active strategy is readable
+  shall: >
+    The device shall report the identifier of the active control strategy to a
+    connected client on request.
+
+- id: REQ-TUNE-002
+  title: Strategy selection over the link
+  shall: >
+    The device shall allow a connected client to select any available control
+    strategy, subject to the safe-state restriction on strategy changes.
+
+- id: REQ-TUNE-003
+  title: Parameter set is self-describing
+  shall: >
+    For the active control strategy the device shall report the number, order,
+    identity and permitted range of its tunable parameters, so that a client can
+    tune a strategy it was not built with prior knowledge of.
+
+- id: REQ-TUNE-004
+  title: Parameters are readable
+  shall: >
+    The device shall report the current value of every tunable parameter of the
+    active control strategy.
+
+- id: REQ-TUNE-005
+  title: Parameters are writable in a safe state
+  shall: >
+    The device shall accept a write to any tunable parameter while the system is
+    not ARMED, and shall reject parameter writes made while ARMED.
+
+- id: REQ-TUNE-006
+  title: Out-of-range parameters are rejected
+  shall: >
+    The device shall reject a parameter write whose value falls outside the range
+    published for that parameter, leaving the stored value unchanged.
+
+- id: REQ-TUNE-007
+  title: Tuned parameters survive a reset
+  shall: >
+    The device shall persist the active strategy selection and its parameter values
+    in non-volatile storage, and shall restore them on the next power-on.

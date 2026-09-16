@@ -1,0 +1,42 @@
+- id: REQ-EST-001
+  title: Pitch angle estimate
+  shall: >
+    The estimator shall provide an estimate of the body pitch angle relative to the
+    gravity vector, fusing accelerometer and gyroscope measurements.
+
+- id: REQ-EST-002
+  title: Pitch rate estimate
+  shall: >
+    The estimator shall provide a bias-corrected estimate of the body pitch rate.
+
+- id: REQ-EST-003
+  title: Bounded steady-state drift
+  shall: >
+    While the robot is stationary and upright, the estimated pitch angle shall not
+    drift by more than 1 degree over 60 seconds of continuous operation.
+
+- id: REQ-EST-004
+  title: Convergence after calibration
+  shall: >
+    Following bias calibration, the estimated pitch shall converge to within
+    1 degree of the true inclination within 1 second.
+
+- id: REQ-EST-005
+  title: Estimate validity is explicit
+  shall: >
+    The estimator shall publish a validity indication alongside each estimate, and
+    shall mark the estimate invalid whenever its inputs are stale, failed, or the
+    estimator has not yet converged.
+
+- id: REQ-EST-006
+  title: Estimate update rate
+  shall: >
+    The estimator shall produce a new estimate on every inertial sample, so that a
+    fresh estimate is available to each execution of the balance control loop.
+
+- id: REQ-EST-007
+  title: Robustness to body acceleration
+  shall: >
+    The estimator shall limit the influence of transient linear body acceleration
+    on the pitch estimate, so that accelerating the chassis does not produce a
+    sustained attitude error.

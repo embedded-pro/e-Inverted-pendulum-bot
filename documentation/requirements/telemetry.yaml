@@ -1,0 +1,37 @@
+- id: REQ-TELEM-001
+  title: State streaming
+  shall: >
+    The device shall stream the estimated pitch, pitch rate, chassis velocity, yaw
+    rate, per-wheel effort and active mode to a subscribed client.
+
+- id: REQ-TELEM-002
+  title: Telemetry rate
+  shall: >
+    The device shall publish telemetry notifications at 25 updates per second while
+    a client is subscribed.
+
+- id: REQ-TELEM-003
+  title: Subscription controls streaming
+  shall: >
+    The device shall emit telemetry notifications only while a client has subscribed
+    to the telemetry characteristic, and shall stop on unsubscription or
+    disconnection.
+
+- id: REQ-TELEM-004
+  title: Telemetry never blocks control
+  shall: >
+    Telemetry production shall not block or delay the balance control loop; if the
+    link cannot accept an update, the device shall drop that update rather than
+    queueing it without bound.
+
+- id: REQ-TELEM-005
+  title: Sample coherence
+  shall: >
+    Each telemetry update shall report values drawn from a single control-loop
+    iteration, so that the reported quantities are mutually consistent.
+
+- id: REQ-TELEM-006
+  title: Fault visibility
+  shall: >
+    When the system is in FAULT, the telemetry stream shall report the latched
+    fault cause.

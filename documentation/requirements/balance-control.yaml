@@ -1,0 +1,67 @@
+- id: REQ-CTRL-001
+  title: Pitch stabilisation about the upright equilibrium
+  shall: >
+    While ARMED on a level surface, the balance controller shall hold the estimated
+    pitch angle within 3 degrees of the pitch setpoint in steady state.
+
+- id: REQ-CTRL-002
+  title: Disturbance rejection
+  shall: >
+    Following an impulsive disturbance that displaces the body by up to 10 degrees
+    from upright, the balance controller shall return the estimated pitch to within
+    3 degrees of the setpoint within 1 second, without falling.
+
+- id: REQ-CTRL-003
+  title: Forward velocity tracking
+  shall: >
+    The balance controller shall track a commanded forward velocity setpoint in
+    steady state while continuing to satisfy the pitch stabilisation requirement.
+
+- id: REQ-CTRL-004
+  title: Yaw rate tracking
+  shall: >
+    The balance controller shall track a commanded yaw-rate setpoint by
+    differentially distributing effort between the two wheels, without degrading
+    pitch stabilisation.
+
+- id: REQ-CTRL-005
+  title: Control law is not fixed by the architecture
+  shall: >
+    The balance controller shall express every control strategy behind a single
+    common interface that consumes the estimated state and the operator setpoints
+    and produces a per-wheel effort command, so that no requirement in this
+    specification presumes a particular control law.
+
+- id: REQ-CTRL-006
+  title: Multiple interchangeable strategies
+  shall: >
+    The balance controller shall support at least two interchangeable control
+    strategies through that interface, and shall report which strategies are
+    available to a connected client.
+
+- id: REQ-CTRL-007
+  title: Strategy selection is restricted to a safe state
+  shall: >
+    The balance controller shall accept a change of the active control strategy
+    only while the system is not ARMED, and shall reject any such request made
+    while ARMED without disturbing the running controller.
+
+- id: REQ-CTRL-008
+  title: Deterministic strategy initialisation
+  shall: >
+    On each transition into ARMED the balance controller shall reset the internal
+    state of the active strategy, so that behaviour on arming does not depend on
+    history accumulated before the previous disarm.
+
+- id: REQ-CTRL-009
+  title: Effort saturation
+  shall: >
+    The balance controller shall limit the commanded per-wheel effort to the
+    configured actuator range, and shall prevent accumulated internal state from
+    growing while the output is saturated.
+
+- id: REQ-CTRL-010
+  title: No effort when not armed
+  shall: >
+    The balance controller shall command zero effort whenever the system is not
+    ARMED.
