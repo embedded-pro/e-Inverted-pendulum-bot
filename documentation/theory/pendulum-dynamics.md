@@ -87,7 +87,7 @@ $x = r\phi$; the ground is flat and rigid; and the longitudinal (pitch) and rota
 dynamics decouple, so the two-wheeled robot can be treated as a planar cart-pole driven by
 the common-mode torque $\tau_c$, with yaw driven separately by $\tau_d$.
 
-```
+```text
                     ● centre of mass (m, J)
                    /
                   /  ℓ
@@ -223,7 +223,7 @@ graph LR
 The inner feedback arrow is not a controller — it is gravity. It is positive feedback, and
 it is what makes the plant unstable.
 
-```
+```text
   disturbance
        │
        ▼

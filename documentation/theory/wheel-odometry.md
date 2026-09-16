@@ -88,7 +88,7 @@ $$
 Together they form a two-bit Gray code — exactly one bit changes per transition — cycling
 through 00, 01, 11, 10 in one rotational direction and the reverse in the other:
 
-```
+```text
         ┌───┐   ┌───┐   ┌───┐
    A  ──┘   └───┘   └───┘   └──
           ┌───┐   ┌───┐   ┌───┐
@@ -237,7 +237,7 @@ graph LR
 
 Geometry, viewed from above:
 
-```
+```text
         ω_L                    ω_R
          │                      │
      ┌───┴───┐              ┌───┴───┐

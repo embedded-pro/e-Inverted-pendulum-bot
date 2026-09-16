@@ -274,7 +274,7 @@ graph LR
 
 Both reduce to the same closed-loop structure, which is what the strategy interface encodes:
 
-```
+```text
    setpoints ──►┌──────────────┐── effort ──►┌───────┐──► state
                 │  strategy    │             │ plant │      │
                 └──────────────┘             └───────┘      │

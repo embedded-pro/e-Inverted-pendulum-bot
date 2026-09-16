@@ -252,7 +252,7 @@ graph LR
 
 The frequency split, drawn as magnitude against frequency:
 
-```
+```text
   gain
    1 ─┤──────────╲              ╱──────────
       │  accel    ╲            ╱   gyro
