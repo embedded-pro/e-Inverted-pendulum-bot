@@ -1,0 +1,228 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 24,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "defaults",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "On",
+                "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "INVERTED_PENDULUM_BOT_EMBEDDED_BUILD": false
+            }
+        },
+        {
+            "name": "host",
+            "displayName": "Configuration for Host Tooling and Tests",
+            "inherits": "defaults",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel",
+                "INVERTED_PENDULUM_BOT_TARGET_PLATFORM": "host",
+                "INVERTED_PENDULUM_BOT_BUILD_TESTS": true,
+                "INVERTED_PENDULUM_BOT_BUILD_HIL_TESTS": true,
+                "INVERTED_PENDULUM_BOT_BUILD_SIMULATOR": true,
+                "NUMERICAL_TOOLBOX_ENABLE_OPTIMIZATIONS": false
+            },
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "host-single-Debug",
+            "displayName": "Configuration for Host Tooling and Tests, Single Config Generator, Debug",
+            "inherits": "defaults",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "INVERTED_PENDULUM_BOT_TARGET_PLATFORM": "host",
+                "INVERTED_PENDULUM_BOT_BUILD_TESTS": true
+            }
+        },
+        {
+            "name": "windows",
+            "displayName": "Cross-compilation Linux \u2192 Windows (clang-cl + xwin)",
+            "inherits": "defaults",
+            "toolchainFile": "${sourceDir}/infra/embedded-infra-lib/cmake/toolchain-clang-x86_64-pc-windows-msvc.cmake",
+            "environment": {
+                "CCACHE_DEPEND": "true",
+                "CCACHE_COMPILERTYPE": "clang-cl"
+            },
+            "cacheVariables": {
+                "CMAKE_COMPILE_WARNING_AS_ERROR": "Off",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel",
+                "CMAKE_PREFIX_PATH": "/opt/qt6-windows/6.10.2/msvc2022_64",
+                "QT_HOST_PATH": "/usr",
+                "QT_HOST_PATH_CMAKE_DIR": "/usr/lib/x86_64-linux-gnu/cmake",
+                "WINDOWS_SDK_ROOT": "/winsdk",
+                "INVERTED_PENDULUM_BOT_TARGET_PLATFORM": "host",
+                "INVERTED_PENDULUM_BOT_BUILD_TESTS": true,
+                "INVERTED_PENDULUM_BOT_BUILD_HIL_TESTS": true,
+                "NUMERICAL_TOOLBOX_ENABLE_OPTIMIZATIONS": false
+            },
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "coverage",
+            "displayName": "coverage",
+            "description": "Configuration for code coverage",
+            "inherits": "host",
+            "cacheVariables": {
+                "EMIL_ENABLE_COVERAGE": "On"
+            },
+            "generator": "Ninja"
+        },
+        {
+            "name": "embedded",
+            "hidden": true,
+            "inherits": "defaults",
+            "environment": {
+                "CMAKE_TOOLCHAIN_FILE": ""
+            },
+            "cacheVariables": {
+                "EMIL_GENERATE_PACKAGE_CONFIG": false,
+                "EMIL_INCLUDE_SEGGER_RTT": "On",
+                "EMIL_SEGGER_RTT_BUFFER_SIZE_UP": "2048",
+                "NUMERICAL_TOOLBOX_ENABLE_OPTIMIZATIONS": true,
+                "INVERTED_PENDULUM_BOT_EMBEDDED_BUILD": true
+            },
+            "generator": "Ninja Multi-Config"
+        },
+        {
+            "name": "stm32",
+            "hidden": true,
+            "inherits": "embedded",
+            "environment": {
+                "CMAKE_TOOLCHAIN_FILE": ""
+            },
+            "cacheVariables": {
+                "TARGET_MCU_VENDOR": "st",
+                "INVERTED_PENDULUM_BOT_TARGET_PLATFORM": "st"
+            }
+        },
+        {
+            "name": "NUCLEO-WB55RG",
+            "displayName": "NUCLEO-WB55RG",
+            "description": "Build for stm32wb55",
+            "inherits": "stm32",
+            "toolchainFile": "${sourceDir}/infra/embedded-infra-lib/cmake/toolchain-arm-gcc-m4-fpv4-sp-d16.cmake",
+            "cacheVariables": {
+                "TARGET_CORTEX": "m4",
+                "TARGET_MCU_FAMILY": "stm32wbxx",
+                "TARGET_MCU": "stm32wb55",
+                "TARGET_MCU_VARIANT": "stm32wb55rg",
+                "INVERTED_PENDULUM_BOT_TARGET_BOARD": "NUCLEO-WB55RG"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "host-Release",
+            "configuration": "Release",
+            "configurePreset": "host"
+        },
+        {
+            "name": "host-Release-WithPackage",
+            "configuration": "Release",
+            "configurePreset": "host",
+            "targets": [
+                "all",
+                "package"
+            ]
+        },
+        {
+            "name": "host-RelWithDebInfo",
+            "configuration": "RelWithDebInfo",
+            "configurePreset": "host"
+        },
+        {
+            "name": "host-Debug",
+            "configuration": "Debug",
+            "configurePreset": "host"
+        },
+        {
+            "name": "host-Debug-WithPackage",
+            "configuration": "Debug",
+            "configurePreset": "host",
+            "targets": [
+                "all",
+                "package"
+            ]
+        },
+        {
+            "name": "host-single-Debug",
+            "configuration": "Debug",
+            "configurePreset": "host-single-Debug"
+        },
+        {
+            "name": "windows-RelWithDebInfo",
+            "configuration": "RelWithDebInfo",
+            "configurePreset": "windows"
+        },
+        {
+            "name": "windows-Debug",
+            "configuration": "Debug",
+            "configurePreset": "windows"
+        },
+        {
+            "name": "windows-Release",
+            "configuration": "Release",
+            "configurePreset": "windows"
+        },
+        {
+            "name": "coverage",
+            "configuration": "Debug",
+            "configurePreset": "coverage"
+        },
+        {
+            "name": "NUCLEO-WB55RG-RelWithDebInfo",
+            "configuration": "RelWithDebInfo",
+            "configurePreset": "NUCLEO-WB55RG"
+        },
+        {
+            "name": "NUCLEO-WB55RG-Debug",
+            "configuration": "Debug",
+            "configurePreset": "NUCLEO-WB55RG"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "defaults",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            },
+            "filter": {
+                "exclude": {
+                    "label": "hardware"
+                }
+            }
+        },
+        {
+            "name": "host",
+            "configurePreset": "host",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        },
+        {
+            "name": "host-single-Debug",
+            "configurePreset": "host-single-Debug",
+            "configuration": "Debug",
+            "inherits": "defaults"
+        }
+    ]
+}

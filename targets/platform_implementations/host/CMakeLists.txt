@@ -1,0 +1,20 @@
+add_library(inverted_pendulum_bot.platform_host ${EMIL_EXCLUDE_FROM_ALL})
+
+target_include_directories(inverted_pendulum_bot.platform_host PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../../../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+target_link_libraries(inverted_pendulum_bot.platform_host PUBLIC
+    inverted_pendulum_bot.platform_abstraction
+    hal.generic
+    services.peripheral
+    services.tracer
+    infra.event
+    infra.stream
+)
+
+target_sources(inverted_pendulum_bot.platform_host PRIVATE
+    PlatformImpl.hpp
+    PlatformImpl.cpp
+)
