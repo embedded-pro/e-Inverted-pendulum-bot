@@ -1,0 +1,226 @@
+---
+title: "Platform Abstraction Design"
+type: design
+status: draft
+version: 0.1.0
+component: "platform-abstraction"
+date: 2026-09-16
+---
+
+| Field     | Value                       |
+|-----------|-----------------------------|
+| Title     | Platform Abstraction Design |
+| Type      | design                      |
+| Status    | draft                       |
+| Version   | 0.1.0                       |
+| Component | platform-abstraction        |
+| Date      | 2026-09-16                  |
+
+> The seam that lets a balancing robot be developed, tested and debugged without a
+> balancing robot. Every peripheral the application needs appears here as a role, and
+> each board supplies the parts that fill those roles.
+
+---
+
+## Responsibilities
+
+**Is responsible for:**
+- Declaring the peripheral roles the application requires, in terms of capability rather
+  than of any particular part.
+- Fixing the conventions — axis orientation, sign of forward wheel motion, effort
+  normalisation — that every board implementation must honour.
+- Owning the event loop that the application runs on.
+- Making the whole control stack constructible on the host, with no microcontroller present.
+
+**Is NOT responsible for:**
+- Any application behaviour. It supplies capability; it never decides anything.
+- Choosing which sensor or driver part is fitted.
+- Providing a uniform interface for peripherals only one board has.
+- Hiding timing. Roles that carry real-time obligations state them.
+
+---
+
+## Component Details
+
+### Part A — Roles, not parts
+
+The abstraction names what the application needs — a source of body-frame inertial
+measurements, a pair of wheel encoders, a two-motor bridge controller, a Bluetooth
+peripheral, a parameter store, a timebase — without naming how any of them is built. This
+is what keeps the inertial part choice an open question that does not block the estimator,
+the controller or their tests.
+
+The existing scaffold seam already carries a status indicator, a serial channel and a
+tracer for the blink-and-CLI example. Those stay: a status LED and a diagnostic trace
+channel remain useful on a robot, and removing them would break the worked example before
+the robot's own components exist to replace it.
+
+### Part B — Conventions are part of the contract
+
+An interface that gets the sign of a wheel wrong compiles perfectly and falls over. The
+abstraction therefore fixes, as a contract every implementation must meet:
+
+- the body-frame axis convention for inertial measurements, and the sense of positive pitch;
+- that forward robot motion produces a positive displacement on *both* wheels, despite
+  their mirrored mounting;
+- that effort is normalised and signed, with the sign selecting direction;
+- that the timebase is monotonic and that measured intervals, not nominal ones, are what
+  callers receive.
+
+These are stated once here rather than rediscovered per board.
+
+### Part C — The host implementation
+
+The host board is not a stub that returns zeros. It is the substrate for testing: a
+simulated plant can drive the inertial and encoder roles from the efforts the controller
+commands, closing the loop entirely in software. That is what makes the specification
+scenarios runnable off-target once step definitions exist, and it is why the abstraction
+must express the plant-facing roles in terms the host can synthesise.
+
+### Part D — Construction and injection
+
+A board is constructed first; the application is constructed against it and holds
+references for its lifetime. Nothing is looked up globally and nothing is discovered at
+run time, so the dependency graph is visible at the construction site and every component
+can be handed a test double instead.
+
+### Part E — Failure is expressible
+
+Peripherals fail. Roles that can fail say so in their results rather than returning a
+plausible value — an inertial read reports that it failed, a driver configuration read-back
+reports a mismatch, a parameter store reports that it is absent. The application is designed
+to treat these as first-class outcomes, which is only possible if the abstraction admits
+them.
+
+---
+
+## Interfaces
+
+### Provided
+
+| Interface                 | Purpose                                                          | Contract                                                                            |
+|---------------------------|------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Inertial measurement role | Body-frame angular rate and acceleration                         | Fixed axis convention; failure and staleness reported explicitly, never substituted |
+| Wheel encoder role        | Signed counts and index events for both wheels                   | Lossless across counter wrap; forward motion positive on both wheels                |
+| Motor bridge role         | Signed effort per motor, plus coast and brake                    | Coast reachable without a healthy control loop                                      |
+| Driver configuration role | Write and read back driver configuration, observe the fault line | Read-back is supported; the fault line is observable without polling configuration  |
+| Bluetooth peripheral role | Advertising, connection, pairing, GATT database                  | Connection loss observable to the application                                       |
+| Parameter store role      | Persist and retrieve tuning parameters                           | Absence or failure is reported so the application can fall back to defaults         |
+| Timebase role             | Periodic scheduling and interval measurement                     | Monotonic; reports the measured interval                                            |
+| Status indicator role     | Visible heartbeat and mode indication                            | Never on a timing-critical path                                                     |
+| Trace role                | Diagnostic text output                                           | May be a no-op on a board without a channel; never blocks the control loop          |
+| Event loop                | Hand control to the platform's scheduler                         | Does not return on the target                                                       |
+
+### Required
+
+| Interface         | Purpose                              | Contract                                                              |
+|-------------------|--------------------------------------|-----------------------------------------------------------------------|
+| Board peripherals | Whatever the concrete board provides | Supplied by each board implementation; not visible to the application |
+
+---
+
+## Data Model
+
+| Entity          | Field        | Type / Unit                           | Range             | Notes                         |
+|-----------------|--------------|---------------------------------------|-------------------|-------------------------------|
+| Inertial sample | angularRate  | radians per second, three axes        | part-dependent    | Body frame, fixed convention  |
+| Inertial sample | acceleration | metres per second squared, three axes | part-dependent    | Body frame, fixed convention  |
+| Inertial sample | valid        | boolean                               | true or false     | False on transfer failure     |
+| Encoder sample  | counts       | signed counts per wheel               | full signed range | Accumulated across wrap       |
+| Encoder sample  | indexSeen    | boolean per wheel                     | true or false     | Advisory; never resets counts |
+| Effort command  | value        | normalised effort                     | -1.0 to 1.0       | Sign selects direction        |
+| Timebase        | interval     | microseconds                          | monotonic         | Measured, not nominal         |
+
+---
+
+## State Machine
+
+Board lifecycle, identical on every platform.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Constructed
+    Constructed --> Initialised : Peripherals configured and verified
+    Constructed --> Unavailable : A required peripheral failed to initialise
+    Initialised --> Running : Event loop entered
+    Running --> Running : Application serviced
+    Unavailable --> [*]
+```
+
+---
+
+## Sequence Diagrams
+
+Composition at startup — the only place the concrete board is visible.
+
+```mermaid
+sequenceDiagram
+    participant Entry as Application entry point
+    participant Board as Concrete board
+    participant App as Balance application
+
+    Entry->>Board: Construct
+    Board->>Board: Configure and verify peripherals
+    Board-->>Entry: Ready
+    Entry->>App: Construct against the board's roles
+    App-->>Entry: Ready
+    Entry->>Board: Enter the event loop
+    Board->>App: Service periodically
+```
+
+The same application against a simulated plant on the host.
+
+```mermaid
+sequenceDiagram
+    participant App as Balance application
+    participant Host as Host board
+    participant Sim as Simulated plant
+
+    App->>Host: Read inertial measurement
+    Host->>Sim: Current body state
+    Sim-->>Host: Angular rate and acceleration
+    Host-->>App: Inertial sample
+    App->>Host: Apply effort
+    Host->>Sim: Wheel efforts
+    Sim->>Sim: Advance the plant one step
+```
+
+---
+
+## Block Diagram
+
+```mermaid
+graph LR
+    APP[Balance application] --> ROLES[Platform roles]
+    ROLES --> TARGET[Microcontroller board]
+    ROLES --> HOST[Host board]
+    ROLES --> MOCK[Mock board for unit tests]
+    TARGET --> HW[Sensor, driver, encoders, radio, storage]
+    HOST --> SIM[Simulated plant]
+    MOCK --> EXP[Test expectations]
+```
+
+---
+
+## Constraints & Limitations
+
+| Constraint              | Value / Description                                                                                                              |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| No allocation           | Roles are constructed once at startup; no allocation after that                                                                  |
+| No global state         | Dependencies are injected at construction; nothing is looked up globally                                                         |
+| Conventions are binding | Axis orientation, wheel sign and effort normalisation are part of the contract, not per-board choices                            |
+| Capability, not parts   | A role exists only if more than one board could plausibly provide it                                                             |
+| Timing is explicit      | Roles with real-time obligations state them; the abstraction does not hide latency                                               |
+| Host fidelity           | The host board can reproduce interfaces and timing, but not analogue reality. Passing on the host is necessary, never sufficient |
+| Scaffold roles retained | The status indicator, serial channel and tracer remain until the robot's own components replace the worked example               |
+
+---
+
+## Open Questions
+
+| # | Question                                                                                 | Options                                                               | Status |
+|---|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|--------|
+| 1 | Does the inertial role expose raw samples or a configured sample rate the board owns?    | Application-driven polling; board-driven sample callback              | open   |
+| 2 | Should the simulated plant live behind the host board or beside it as a separate tool?   | Behind the host board; separate simulator composed at the entry point | open   |
+| 3 | Is the parameter store a distinct role or part of the board's general configuration?     | Distinct role; folded into board configuration                        | open   |
+| 4 | Should a second board be defined now to prove the abstraction is not shaped by one part? | Defer until the first board works; define early as a design check     | open   |

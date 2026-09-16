@@ -1,0 +1,50 @@
+- id: REQ-DRIVE-001
+  title: Motor driver configuration
+  shall: >
+    The actuation component shall configure the motor driver over its serial
+    configuration interface during INIT, and shall verify the configuration by
+    reading it back.
+
+- id: REQ-DRIVE-002
+  title: Direct bridge control
+  shall: >
+    The actuation component shall drive the motor driver in its externally
+    commutated mode, controlling each full bridge directly rather than through the
+    driver's internal step sequencer.
+
+- id: REQ-DRIVE-003
+  title: Independent per-motor command
+  shall: >
+    The actuation component shall apply a signed effort command to each of the two
+    motors independently.
+
+- id: REQ-DRIVE-004
+  title: Driver fault reporting
+  shall: >
+    When the motor driver asserts its fault output, the actuation component shall
+    latch the fault, disable both bridges, and report the condition to the safety
+    supervisor.
+
+- id: REQ-DRIVE-005
+  title: Current limiting
+  shall: >
+    The actuation component shall configure a per-motor current limit that does not
+    exceed the continuous current rating of the fitted motors.
+
+- id: REQ-DRIVE-006
+  title: Selectable coast and brake
+  shall: >
+    The actuation component shall provide both a coasting and an actively braked
+    disable state, and shall use coasting for all safety-initiated disables.
+
+- id: REQ-DRIVE-007
+  title: Commutation frequency
+  shall: >
+    The actuation component shall commutate the motor bridges at a frequency above
+    the audible band and consistent with the motor electrical time constant.
+
+- id: REQ-DRIVE-008
+  title: Effort to duty mapping is documented
+  shall: >
+    The actuation component shall apply a documented, monotonic mapping from the
+    controller's effort command to bridge duty cycle and direction.

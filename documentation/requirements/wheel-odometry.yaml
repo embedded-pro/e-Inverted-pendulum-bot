@@ -1,0 +1,42 @@
+- id: REQ-ODOM-001
+  title: Quadrature decoding
+  shall: >
+    The odometry component shall decode the A and B channels of each wheel encoder
+    in four-times quadrature to obtain a signed incremental count.
+
+- id: REQ-ODOM-002
+  title: Independent per-wheel measurement
+  shall: >
+    The odometry component shall maintain an independent position and velocity
+    estimate for each of the two wheels.
+
+- id: REQ-ODOM-003
+  title: Direction sign convention
+  shall: >
+    The odometry component shall report a positive wheel displacement for forward
+    robot motion on both wheels, irrespective of the physical mounting mirror.
+
+- id: REQ-ODOM-004
+  title: Wheel angular velocity
+  shall: >
+    The odometry component shall provide an angular-velocity estimate for each
+    wheel, updated at the control-loop rate.
+
+- id: REQ-ODOM-005
+  title: Index pulse handling
+  shall: >
+    The odometry component shall expose the once-per-revolution index event of each
+    encoder without allowing it to disturb the incremental count.
+
+- id: REQ-ODOM-006
+  title: Counter wrap is lossless
+  shall: >
+    The odometry component shall accumulate wheel position across hardware counter
+    wrap-around without losing or duplicating counts.
+
+- id: REQ-ODOM-007
+  title: Chassis motion derivation
+  shall: >
+    The odometry component shall derive the forward linear velocity and the yaw
+    rate of the chassis from the two wheel velocities and the documented wheel
+    geometry.

@@ -125,15 +125,24 @@ add new components.
 
 ## Documentation
 
-| Document | Description |
-|---|---|
-| [System Architecture](documentation/architecture/system.md) | Example architecture document |
-| [Example Component Design](documentation/design/example-component.md) | Example design document |
-| [Running Sum (Theory)](documentation/theory/example-topic.md) | Example theory document |
-| [Example Requirements](documentation/requirements/example/example.yaml) | Example requirements (validated against `documentation/tools/requirement.schema.json`) |
-| [Documentation Templates](documentation/templates/) | Starting points for new architecture/design/theory/requirements docs |
-| [Performance Optimization Guide](documentation/performance-optimization/README.md) | Embedded performance techniques, assembly analysis, cycle budgets |
-| [AI Agent Instructions](CLAUDE.md) | Development guidelines, patterns, and constraints |
+| Document                                                                           | Description                                                                       |
+|------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| [System Architecture](documentation/architecture/system.md)                        | Components, interfaces and cross-cutting concerns of the robot                    |
+| [Use Cases](documentation/use-cases/README.md)                                     | Actors, flows and the Gherkin scenarios every requirement traces to               |
+| [Requirements](documentation/requirements/)                                        | Requirement sets, validated against `documentation/tools/requirement.schema.json` |
+| [Safety Supervisor](documentation/design/safety-supervisor.md)                     | Arm/disarm/fault state machine and the disarm conditions                          |
+| [Balance Control](documentation/design/balance-control.md)                         | The selectable control-strategy interface and setpoint handling                   |
+| [Attitude Estimation](documentation/design/attitude-estimation.md)                 | Pitch estimation, bias calibration and estimate validity                          |
+| [Motion Actuation](documentation/design/motion-actuation.md)                       | Motor driver, effort mapping and quadrature decoding                              |
+| [BLE Service](documentation/design/ble-service.md)                                 | GATT layout for teleoperation, telemetry and tuning                               |
+| [Platform Abstraction](documentation/design/platform-abstraction.md)               | The peripheral roles each board must supply                                       |
+| [Pendulum Dynamics](documentation/theory/pendulum-dynamics.md)                     | Equations of motion, linearisation and the fall time constant                     |
+| [Control Laws](documentation/theory/control-laws.md)                               | Cascaded PID and LQR derived from the shared plant model                          |
+| [Pitch Estimation Theory](documentation/theory/attitude-estimation.md)             | Complementary and Kalman formulations, drift and noise                            |
+| [Wheel Odometry](documentation/theory/wheel-odometry.md)                           | Quadrature decoding and differential-drive kinematics                             |
+| [Documentation Templates](documentation/templates/)                                | Starting points for new architecture/design/theory/requirements docs              |
+| [Performance Optimization Guide](documentation/performance-optimization/README.md) | Embedded performance techniques, assembly analysis, cycle budgets                 |
+| [AI Agent Instructions](CLAUDE.md)                                                 | Development guidelines, patterns, and constraints                                 |
 
 ## License
 

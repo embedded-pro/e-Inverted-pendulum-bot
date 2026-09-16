@@ -1,0 +1,57 @@
+- id: REQ-SAFE-001
+  title: Arming requires a near-upright attitude
+  shall: >
+    The safety supervisor shall accept an arm command only while the estimated
+    pitch angle is within 5 degrees of upright and the attitude estimate is
+    reported valid.
+
+- id: REQ-SAFE-002
+  title: Fall detection disarms the drive
+  shall: >
+    When the estimated pitch angle exceeds 35 degrees from upright while ARMED,
+    the safety supervisor shall transition to FAULT and command both motors to
+    coast within 20 milliseconds.
+
+- id: REQ-SAFE-003
+  title: Motors coast on disarm
+  shall: >
+    On any transition out of ARMED the system shall place both motor bridges in a
+    high-impedance coasting state rather than actively braking.
+
+- id: REQ-SAFE-004
+  title: Faults latch until acknowledged
+  shall: >
+    The safety supervisor shall latch a fault condition and shall remain in FAULT
+    until the operator explicitly clears the fault, even if the originating
+    condition has cleared.
+
+- id: REQ-SAFE-005
+  title: Re-arming is always explicit
+  shall: >
+    The system shall never re-enter ARMED automatically; re-arming shall require a
+    new arm command from the operator after the fault has been cleared.
+
+- id: REQ-SAFE-006
+  title: Motor driver faults escalate
+  shall: >
+    When the motor driver reports a fault condition, the safety supervisor shall
+    transition to FAULT and record the reported fault cause.
+
+- id: REQ-SAFE-007
+  title: Loss of a valid attitude estimate is a fault
+  shall: >
+    If the attitude estimate becomes invalid or stale while ARMED, the safety
+    supervisor shall transition to FAULT and disarm the drive.
+
+- id: REQ-SAFE-008
+  title: Control loop supervision
+  shall: >
+    The system shall monitor that the control loop completes within its allotted
+    period, and shall transition to FAULT if the loop is not serviced for more
+    than 3 consecutive periods.
+
+- id: REQ-SAFE-009
+  title: Reset leaves the drive safe
+  shall: >
+    An unexpected reset while ARMED shall leave both motor bridges disabled, and
+    the system shall resume in INIT rather than in ARMED.

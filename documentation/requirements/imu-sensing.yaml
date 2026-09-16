@@ -1,0 +1,43 @@
+- id: REQ-IMU-001
+  title: Inertial sampling rate
+  shall: >
+    The sensing component shall acquire a complete three-axis acceleration and
+    three-axis angular-rate sample at a rate of at least 500 samples per second.
+
+- id: REQ-IMU-002
+  title: Measurement ranges
+  shall: >
+    The inertial sensor shall be configured for an angular-rate range of at least
+    plus or minus 500 degrees per second and an acceleration range of at least
+    plus or minus 4 g.
+
+- id: REQ-IMU-003
+  title: Gyroscope bias calibration at rest
+  shall: >
+    During CALIBRATING the sensing component shall estimate the angular-rate bias
+    of each gyroscope axis while the robot is held still, and shall subtract that
+    bias from all subsequent samples.
+
+- id: REQ-IMU-004
+  title: Calibration requires stillness
+  shall: >
+    The sensing component shall abandon bias calibration and report failure if the
+    measured motion during the calibration window exceeds the stillness threshold.
+
+- id: REQ-IMU-005
+  title: Sample staleness detection
+  shall: >
+    The sensing component shall mark its output invalid if no new inertial sample
+    has been obtained for more than 3 sampling periods.
+
+- id: REQ-IMU-006
+  title: Sensor bus failure detection
+  shall: >
+    The sensing component shall detect a failed inertial sensor transfer and shall
+    report the failure rather than propagating an unspecified measurement.
+
+- id: REQ-IMU-007
+  title: Body axis convention
+  shall: >
+    The sensing component shall express all inertial measurements in a documented,
+    fixed body-frame axis convention that is independent of the sensor part fitted.
