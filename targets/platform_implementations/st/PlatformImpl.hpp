@@ -9,12 +9,12 @@
 #include "hal_st/stm32fxxx/SpiMasterStm.hpp"
 #include "hal_st/synchronous_stm32fxxx/SynchronousPwmStm.hpp"
 #include "infra/stream/OutputStream.hpp"
+#include "infra/util/AutoResetFunction.hpp"
+#include "infra/util/ReallyAssert.hpp"
 #include "services/peripheral/SpiMasterWithChipSelect.hpp"
 #include "services/tracer/SerialCommunicationOnSeggerRtt.hpp"
 #include "services/tracer/StreamWriterOnSerialCommunication.hpp"
 #include "services/tracer/Tracer.hpp"
-#include "infra/util/AutoResetFunction.hpp"
-#include "infra/util/ReallyAssert.hpp"
 #include <array>
 
 namespace application
@@ -136,18 +136,18 @@ namespace application
 
         hal::GpioPinStm statusLed{ hal::Port::B, 0 };
 
-        hal::GpioPinStm leftHighA{ hal::Port::A, 8 };    // TIM1_CH1
-        hal::GpioPinStm leftLowA{ hal::Port::A, 7 };     // TIM1_CH1N
-        hal::GpioPinStm leftHighB{ hal::Port::A, 9 };    // TIM1_CH2
-        hal::GpioPinStm leftLowB{ hal::Port::B, 14 };    // TIM1_CH2N
-        hal::GpioPinStm leftBreak{ hal::Port::B, 12 };   // TIM1_BKIN
+        hal::GpioPinStm leftHighA{ hal::Port::A, 8 };  // TIM1_CH1
+        hal::GpioPinStm leftLowA{ hal::Port::A, 7 };   // TIM1_CH1N
+        hal::GpioPinStm leftHighB{ hal::Port::A, 9 };  // TIM1_CH2
+        hal::GpioPinStm leftLowB{ hal::Port::B, 14 };  // TIM1_CH2N
+        hal::GpioPinStm leftBreak{ hal::Port::B, 12 }; // TIM1_BKIN
 
-        hal::GpioPinStm rightHighA{ hal::Port::B, 8 };   // TIM16_CH1
-        hal::GpioPinStm rightLowA{ hal::Port::B, 6 };    // TIM16_CH1N
-        hal::GpioPinStm rightBreakA{ hal::Port::B, 5 };  // TIM16_BKIN
-        hal::GpioPinStm rightHighB{ hal::Port::B, 9 };   // TIM17_CH1
-        hal::GpioPinStm rightLowB{ hal::Port::B, 7 };    // TIM17_CH1N
-        hal::GpioPinStm rightBreakB{ hal::Port::B, 4 };  // TIM17_BKIN
+        hal::GpioPinStm rightHighA{ hal::Port::B, 8 };  // TIM16_CH1
+        hal::GpioPinStm rightLowA{ hal::Port::B, 6 };   // TIM16_CH1N
+        hal::GpioPinStm rightBreakA{ hal::Port::B, 5 }; // TIM16_BKIN
+        hal::GpioPinStm rightHighB{ hal::Port::B, 9 };  // TIM17_CH1
+        hal::GpioPinStm rightLowB{ hal::Port::B, 7 };   // TIM17_CH1N
+        hal::GpioPinStm rightBreakB{ hal::Port::B, 4 }; // TIM17_BKIN
 
         hal::GpioPinStm spiClock{ hal::Port::A, 5 };
         hal::GpioPinStm spiMiso{ hal::Port::A, 6 };

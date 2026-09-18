@@ -183,3 +183,52 @@ TEST_F(BlinkyCliTest, brake_shorts_the_motors)
 
     EXPECT_THAT(Output(), testing::HasSubstr("braking"));
 }
+
+// A malformed argument must move neither wheel. strtof reports failure as 0.0,
+// which is itself a valid effort, so these would otherwise read as a command to
+// stop rather than as a command to reject. The strict mock fails the test on its
+// own if Apply is reached.
+
+TEST_F(BlinkyCliTest, drive_with_a_missing_right_argument_is_rejected)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive 0.3 ");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(BlinkyCliTest, drive_with_a_non_numeric_argument_is_rejected)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive abc def");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(BlinkyCliTest, drive_with_a_trailing_third_argument_is_rejected)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive 0.3 0.7 0.9");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(BlinkyCliTest, drive_with_a_partially_numeric_argument_is_rejected)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive 0.3 0.7x");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}

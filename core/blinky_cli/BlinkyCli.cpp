@@ -2,19 +2,30 @@
 #include <algorithm>
 #include <array>
 #include <cstdlib>
+#include <optional>
 
 namespace application
 {
     namespace
     {
         // strtof needs a terminated buffer, and BoundedConstString is not one.
-        float ParseEffort(const infra::BoundedConstString& token)
+        // It also reports failure as 0.0, which for a motor command is a valid
+        // value, so the parse is only accepted when the whole token was consumed.
+        std::optional<float> ParseEffort(const infra::BoundedConstString& token)
         {
             std::array<char, 16> buffer{};
-            const auto size = std::min(token.size(), buffer.size() - 1);
-            std::copy_n(token.begin(), size, buffer.begin());
+            if (token.empty() || token.size() >= buffer.size())
+                return std::nullopt;
 
-            return std::strtof(buffer.data(), nullptr);
+            std::copy_n(token.begin(), token.size(), buffer.begin());
+
+            char* end = nullptr;
+            const auto value = std::strtof(buffer.data(), &end);
+
+            if (end != buffer.data() + token.size())
+                return std::nullopt;
+
+            return value;
         }
     }
 
@@ -82,7 +93,8 @@ namespace application
             return;
         }
 
-        // "<left> <right>", each a signed decimal fraction.
+        // "<left> <right>", each a signed decimal fraction. Both are parsed before
+        // anything is applied, so a malformed command moves neither wheel.
         const auto separator = params.find(' ');
         if (separator == infra::BoundedConstString::npos)
         {
@@ -90,7 +102,16 @@ namespace application
             return;
         }
 
-        motionActuation.Apply(ParseEffort(params.substr(0, separator)), ParseEffort(params.substr(separator + 1)));
+        const auto effortLeft = ParseEffort(params.substr(0, separator));
+        const auto effortRight = ParseEffort(params.substr(separator + 1));
+
+        if (!effortLeft || !effortRight)
+        {
+            tracer.Trace() << "usage: drive <left> <right>";
+            return;
+        }
+
+        motionActuation.Apply(*effortLeft, *effortRight);
         tracer.Trace() << "driving";
     }
 

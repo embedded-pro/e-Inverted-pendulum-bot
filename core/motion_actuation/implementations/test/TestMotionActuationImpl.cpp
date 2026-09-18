@@ -3,6 +3,7 @@
 #include "hal/interfaces/test_doubles/GpioMock.hpp"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <optional>
 
 namespace
 {
