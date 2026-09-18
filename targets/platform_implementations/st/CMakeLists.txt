@@ -10,6 +10,8 @@ target_include_directories(inverted_pendulum_bot.platform_st PUBLIC
 target_link_libraries(inverted_pendulum_bot.platform_st PUBLIC
     inverted_pendulum_bot.platform_abstraction
     hal_st.instantiations
+    hal_st.synchronous_stm32fxxx
+    services.peripheral
     services.tracer
 )
 

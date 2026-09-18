@@ -1,6 +1,7 @@
 #ifndef CORE_BLINKY_CLI_BLINKY_CLI_HPP
 #define CORE_BLINKY_CLI_BLINKY_CLI_HPP
 
+#include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/Platform.hpp"
 #include "services/peripheral/DebugLed.hpp"
 #include "services/util/Terminal.hpp"
@@ -17,22 +18,26 @@ namespace application
     class BlinkyCli
     {
     public:
-        explicit BlinkyCli(platform::Platform& platform);
+        BlinkyCli(platform::Platform& platform, motion::MotionActuation& motionActuation);
 
     private:
         class CliCommands final
             : public services::TerminalCommands
         {
         public:
-            CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer);
+            CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer, motion::MotionActuation& motionActuation);
 
             infra::MemoryRange<const Command> Commands() override;
 
         private:
             void Ping(const infra::BoundedConstString& params);
             void Identify(const infra::BoundedConstString& params);
+            void Drive(const infra::BoundedConstString& params);
+            void Coast(const infra::BoundedConstString& params);
+            void Brake(const infra::BoundedConstString& params);
 
             services::Tracer& tracer;
+            motion::MotionActuation& motionActuation;
         };
 
         services::DebugLed debugLed;

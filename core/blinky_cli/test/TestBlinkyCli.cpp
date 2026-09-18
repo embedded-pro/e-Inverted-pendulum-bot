@@ -1,4 +1,5 @@
 #include "core/blinky_cli/BlinkyCli.hpp"
+#include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/test_doubles/PlatformMock.hpp"
 #include "hal/interfaces/test_doubles/SerialCommunicationMock.hpp"
 #include "infra/stream/StringOutputStream.hpp"
@@ -42,6 +43,18 @@ namespace
         {}
     };
 
+    class MotionActuationMock
+        : public motion::MotionActuation
+    {
+    public:
+        virtual ~MotionActuationMock() = default;
+
+        MOCK_METHOD(void, Apply, (float effortLeft, float effortRight), (override));
+        MOCK_METHOD(void, Disable, (motion::DisableState state), (override));
+        MOCK_METHOD(motion::FaultCause, Fault, (), (const, override));
+        MOCK_METHOD(void, ClearFault, (), (override));
+    };
+
     class BlinkyCliTest
         : public testing::Test
         , public infra::ClockFixture
@@ -65,13 +78,15 @@ namespace
         infra::StringOutputStream stream{ text };
         services::TracerToStream tracer{ stream };
         testing::StrictMock<platform::PlatformMock> platform;
+        testing::StrictMock<MotionActuationMock> motionActuation;
     };
 }
 
 TEST_F(BlinkyCliTest, greets_and_shows_a_prompt_on_construction)
 {
-    application::BlinkyCli blinkyCli{ platform };
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
 
-    EXPECT_THAT(Output(), testing::HasSubstr("blinky-cli ready"));
+    EXPECT_THAT(Output(), testing::HasSubstr("ready"));
+    EXPECT_THAT(Output(), testing::HasSubstr("drive"));
     EXPECT_THAT(Output(), testing::HasSubstr("> "));
 }

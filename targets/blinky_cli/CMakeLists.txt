@@ -8,6 +8,7 @@ target_include_directories(inverted_pendulum_bot.blinky_cli.main PUBLIC
 target_link_libraries(inverted_pendulum_bot.blinky_cli.main PUBLIC
     inverted_pendulum_bot.platform_impl
     inverted_pendulum_bot.blinky_cli
+    inverted_pendulum_bot.motion_actuation.implementations
 )
 
 target_sources(inverted_pendulum_bot.blinky_cli.main PRIVATE
