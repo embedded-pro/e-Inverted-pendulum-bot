@@ -30,38 +30,37 @@ namespace application
         : services::TerminalCommands(terminal)
         , tracer(tracer)
         , motionActuation(motionActuation)
+        , commands{ {
+              { { "ping", "p", "reply with pong" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Ping(params);
+                  } },
+              { { "id", "i", "print the board identifier" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Identify(params);
+                  } },
+              { { "drive", "d", "apply signed effort to both wheels, -1.0 to 1.0" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Drive(params);
+                  } },
+              { { "coast", "c", "release both bridges" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Coast(params);
+                  } },
+              { { "brake", "b", "short both motors" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Brake(params);
+                  } },
+          } }
     {}
 
     infra::MemoryRange<const services::TerminalCommands::Command> BlinkyCli::CliCommands::Commands()
     {
-        static const std::array<Command, 5> commands = { {
-            { { "ping", "p", "reply with pong" },
-                [this](const infra::BoundedConstString& params)
-                {
-                    Ping(params);
-                } },
-            { { "id", "i", "print the board identifier" },
-                [this](const infra::BoundedConstString& params)
-                {
-                    Identify(params);
-                } },
-            { { "drive", "d", "apply signed effort to both wheels, -1.0 to 1.0" },
-                [this](const infra::BoundedConstString& params)
-                {
-                    Drive(params);
-                } },
-            { { "coast", "c", "release both bridges" },
-                [this](const infra::BoundedConstString& params)
-                {
-                    Coast(params);
-                } },
-            { { "brake", "b", "short both motors" },
-                [this](const infra::BoundedConstString& params)
-                {
-                    Brake(params);
-                } },
-        } };
-
         return infra::MakeRange(commands);
     }
 

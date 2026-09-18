@@ -36,6 +36,28 @@ namespace
         infra::Function<void()> onFault;
         std::optional<motion::MotionActuationImpl> actuation;
     };
+
+    // Construction is left to each test so the configuration can vary.
+    class MotionActuationImplConfigTest
+        : public testing::Test
+    {
+    public:
+        ~MotionActuationImplConfigTest() override
+        {
+            if (actuation)
+            {
+                EXPECT_CALL(faultPin, DisableInterrupt());
+                EXPECT_CALL(left, Stop());
+                EXPECT_CALL(right, Stop());
+                actuation = std::nullopt;
+            }
+        }
+
+        testing::StrictMock<platform::MotorBridgeMock> left;
+        testing::StrictMock<platform::MotorBridgeMock> right;
+        testing::StrictMock<hal::GpioPinMock> faultPin;
+        std::optional<motion::MotionActuationImpl> actuation;
+    };
 }
 
 TEST_F(MotionActuationImplTest, positive_effort_drives_half_bridge_a)
@@ -120,4 +142,32 @@ TEST_F(MotionActuationImplTest, fault_stays_latched_and_ignores_effort_until_cle
     EXPECT_CALL(left, Start(hal::Percent{ 50 }, hal::Percent{ 0 }));
     EXPECT_CALL(right, Start(hal::Percent{ 50 }, hal::Percent{ 0 }));
     actuation->Apply(0.5f, 0.5f);
+}
+
+TEST_F(MotionActuationImplConfigTest, switching_frequency_is_configurable)
+{
+    motion::MotionActuationImpl::Config config;
+    config.switchingFrequency = hal::Hertz{ 20000 };
+
+    EXPECT_CALL(left, SetBaseFrequency(hal::Hertz{ 20000 }));
+    EXPECT_CALL(right, SetBaseFrequency(hal::Hertz{ 20000 }));
+    EXPECT_CALL(left, Stop());
+    EXPECT_CALL(right, Stop());
+    EXPECT_CALL(faultPin, EnableInterrupt(testing::_, hal::InterruptTrigger::fallingEdge, testing::_));
+
+    actuation.emplace(left, right, faultPin, config);
+}
+
+TEST_F(MotionActuationImplConfigTest, an_active_high_fault_line_triggers_on_the_rising_edge)
+{
+    motion::MotionActuationImpl::Config config;
+    config.faultActiveHigh = true;
+
+    EXPECT_CALL(left, SetBaseFrequency(testing::_));
+    EXPECT_CALL(right, SetBaseFrequency(testing::_));
+    EXPECT_CALL(left, Stop());
+    EXPECT_CALL(right, Stop());
+    EXPECT_CALL(faultPin, EnableInterrupt(testing::_, hal::InterruptTrigger::risingEdge, testing::_));
+
+    actuation.emplace(left, right, faultPin, config);
 }

@@ -5,6 +5,7 @@
 #include "core/platform_abstraction/Platform.hpp"
 #include "services/peripheral/DebugLed.hpp"
 #include "services/util/Terminal.hpp"
+#include <array>
 
 namespace application
 {
@@ -38,6 +39,10 @@ namespace application
 
             services::Tracer& tracer;
             motion::MotionActuation& motionActuation;
+
+            // Owned per instance rather than function-local static: the handlers
+            // capture this, so a shared array would outlive the object it points at.
+            std::array<Command, 5> commands;
         };
 
         services::DebugLed debugLed;

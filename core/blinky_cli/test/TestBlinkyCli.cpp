@@ -65,6 +65,10 @@ namespace
             EXPECT_CALL(platform, StatusLed()).WillRepeatedly(testing::ReturnRef(led));
             EXPECT_CALL(platform, Communication()).WillRepeatedly(testing::ReturnRef(communication));
             EXPECT_CALL(platform, Tracer()).WillRepeatedly(testing::ReturnRef(tracer));
+
+            // The terminal echoes every keystroke; the tests assert on the traced
+            // output instead, so the echo traffic itself is not interesting.
+            EXPECT_CALL(communication, SendDataMock(testing::_)).Times(testing::AnyNumber());
         }
 
         std::string Output() const
@@ -72,8 +76,23 @@ namespace
             return std::string{ text.begin(), text.end() };
         }
 
+        void Send(const std::string& line)
+        {
+            const auto terminated = line + "\r\n";
+            const infra::ConstByteRange data{ reinterpret_cast<const uint8_t*>(terminated.data()), reinterpret_cast<const uint8_t*>(terminated.data() + terminated.size()) };
+
+            communication.dataReceived(data);
+
+            // The terminal chains the next write from each completion, so the drain
+            // is bounded rather than run until it settles.
+            for (int i = 0; i != 64 && communication.actionOnCompletion; ++i)
+                communication.actionOnCompletion();
+
+            ExecuteAllActions();
+        }
+
         GpioStub led;
-        hal::SerialCommunicationMock communication;
+        testing::StrictMock<hal::SerialCommunicationMock> communication;
         infra::BoundedString::WithStorage<512> text;
         infra::StringOutputStream stream{ text };
         services::TracerToStream tracer{ stream };
@@ -89,4 +108,78 @@ TEST_F(BlinkyCliTest, greets_and_shows_a_prompt_on_construction)
     EXPECT_THAT(Output(), testing::HasSubstr("ready"));
     EXPECT_THAT(Output(), testing::HasSubstr("drive"));
     EXPECT_THAT(Output(), testing::HasSubstr("> "));
+}
+
+TEST_F(BlinkyCliTest, ping_replies_pong)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    Send("ping");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("pong"));
+}
+
+TEST_F(BlinkyCliTest, id_prints_the_board_identifier)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    Send("id");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("inverted-pendulum-bot blinky-cli"));
+}
+
+TEST_F(BlinkyCliTest, drive_applies_both_efforts)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+    EXPECT_CALL(motionActuation, Apply(testing::FloatEq(0.3f), testing::FloatEq(-0.7f)));
+
+    Send("drive 0.3 -0.7");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("driving"));
+}
+
+TEST_F(BlinkyCliTest, drive_without_a_second_argument_prints_usage)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive 0.3");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(BlinkyCliTest, drive_is_refused_while_a_fault_is_latched)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::driverFault));
+
+    Send("drive 0.3 -0.7");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("refused"));
+}
+
+TEST_F(BlinkyCliTest, coast_releases_the_bridges)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Disable(motion::DisableState::coast));
+
+    Send("coast");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("coasting"));
+}
+
+TEST_F(BlinkyCliTest, brake_shorts_the_motors)
+{
+    application::BlinkyCli blinkyCli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Disable(motion::DisableState::brake));
+
+    Send("brake");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("braking"));
 }
