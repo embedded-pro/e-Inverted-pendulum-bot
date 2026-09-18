@@ -7,15 +7,17 @@
 
 namespace motion
 {
-    class MotionActuationImpl
+    class MotionActuationImpl final
         : public MotionActuation
     {
     public:
         struct Config
         {
-            // Not constexpr: infra::Quantity has no constexpr constructor.
-            Config()
-            {}
+            // Defaulted out of line: the constructor below takes a Config()
+            // default argument, and defining this one here would need the
+            // initializers below before the enclosing class is complete.
+            // Not constexpr either: infra::Quantity has no constexpr constructor.
+            Config();
 
             // Above the audible band and compatible with the motor's electrical
             // time constant.
@@ -36,7 +38,12 @@ namespace motion
         void ClearFault() override;
 
     private:
-        void ApplyTo(platform::MotorBridge& bridge, float effort);
+        void ApplyTo(platform::MotorBridge& bridge, float effort) const;
+
+        // Non-virtual: reached from the constructor and destructor, where a
+        // virtual Disable() would not dispatch to an override anyway.
+        void Coast() const;
+
         void OnFault();
 
         platform::MotorBridge& left;

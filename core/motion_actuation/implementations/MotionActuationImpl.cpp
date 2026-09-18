@@ -12,6 +12,8 @@ namespace motion
         }
     }
 
+    MotionActuationImpl::Config::Config() = default;
+
     MotionActuationImpl::MotionActuationImpl(platform::MotorBridge& left, platform::MotorBridge& right, hal::GpioPin& faultPin, const Config& config)
         : left(left)
         , right(right)
@@ -21,7 +23,7 @@ namespace motion
         left.SetBaseFrequency(config.switchingFrequency);
         right.SetBaseFrequency(config.switchingFrequency);
 
-        Disable(DisableState::coast);
+        Coast();
 
         faultPin.EnableInterrupt([this]()
             {
@@ -33,7 +35,7 @@ namespace motion
     MotionActuationImpl::~MotionActuationImpl()
     {
         faultPin.DisableInterrupt();
-        Disable(DisableState::coast);
+        Coast();
     }
 
     void MotionActuationImpl::Apply(float effortLeft, float effortRight)
@@ -47,7 +49,7 @@ namespace motion
 
     // Magnitude selects duty, sign selects which half-bridge carries it. Monotonic,
     // so a change in commanded effort always moves the wheel the same way.
-    void MotionActuationImpl::ApplyTo(platform::MotorBridge& bridge, float effort)
+    void MotionActuationImpl::ApplyTo(platform::MotorBridge& bridge, float effort) const
     {
         const auto clamped = std::clamp(effort, -1.0f, 1.0f);
         const auto duty = DutyOf(std::fabs(clamped));
@@ -67,9 +69,14 @@ namespace motion
         }
         else
         {
-            left.Stop();
-            right.Stop();
+            Coast();
         }
+    }
+
+    void MotionActuationImpl::Coast() const
+    {
+        left.Stop();
+        right.Stop();
     }
 
     FaultCause MotionActuationImpl::Fault() const
@@ -85,6 +92,6 @@ namespace motion
     void MotionActuationImpl::OnFault()
     {
         fault = FaultCause::driverFault;
-        Disable(DisableState::coast);
+        Coast();
     }
 }

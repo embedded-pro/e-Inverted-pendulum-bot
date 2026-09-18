@@ -105,7 +105,7 @@ namespace application
         const auto effortLeft = ParseEffort(params.substr(0, separator));
         const auto effortRight = ParseEffort(params.substr(separator + 1));
 
-        if (!effortLeft || !effortRight)
+        if (!effortLeft.has_value() || !effortRight.has_value())
         {
             tracer.Trace() << "usage: drive <left> <right>";
             return;

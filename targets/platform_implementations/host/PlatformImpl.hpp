@@ -86,7 +86,7 @@ namespace application
         public:
             void SendAndReceive(infra::ConstByteRange, infra::ByteRange receiveData, hal::SpiAction, const infra::Function<void()>& onDone) override
             {
-                std::fill(receiveData.begin(), receiveData.end(), 0);
+                std::ranges::fill(receiveData, 0);
                 onDone();
             }
 
@@ -106,7 +106,7 @@ namespace application
         public:
             void Measure(SamplesRange samples, const infra::Function<void()>& onDone) override
             {
-                std::fill(samples.begin(), samples.end(), infra::Quantity<infra::MilliVolt, uint32_t>{ 0 });
+                std::ranges::fill(samples, infra::Quantity<infra::MilliVolt, uint32_t>{ 0 });
                 onDone();
             }
         };
