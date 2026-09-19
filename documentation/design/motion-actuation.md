@@ -71,6 +71,23 @@ ripple is not symmetric. Commanded magnitude is unaffected and the effort mappin
 monotonic, which is what Part C requires. The two motors also no longer share a timer, so
 their switching edges are not phase-locked.
 
+It also moves one input off the timer, and that has a safety consequence the board must
+answer for. A break event forces a timer output to its idle state, which is low, but it
+cannot touch a pin the timer does not own. With the magnitude input released and the
+direction input left high, the bridge reads as fully reversed rather than released:
+
+|                             | Magnitude input          | Direction input      | Bridge             |
+|-----------------------------|--------------------------|----------------------|--------------------|
+| Break while driving forward | low, forced by the timer | low                  | released           |
+| Break while driving reverse | low, forced by the timer | **high, not forced** | **fully reversed** |
+
+**The fault line must therefore pull both direction inputs low in hardware**, by an
+open-drain gate or a device per pin. Without it the drive's hardware release is conditional
+on the commanded direction, which is exactly the dependency the safety design exists to
+remove. Firmware also drives the direction inputs low when it latches the fault, and the
+driver disables its own outputs on its own faults, but neither is the unconditional
+hardware path this requirement is about.
+
 ### Part B — Configuration and verification
 
 Driver configuration — current limit, decay mode, sequencer bypass — is written during INIT
