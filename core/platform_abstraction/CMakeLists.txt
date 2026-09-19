@@ -1,11 +1,11 @@
-add_library(inverted_pendulum_bot.platform_abstraction INTERFACE ${EMIL_EXCLUDE_FROM_ALL})
+add_library(inverted_pendulum_bot.platform_abstraction ${EMIL_EXCLUDE_FROM_ALL})
 
-target_include_directories(inverted_pendulum_bot.platform_abstraction INTERFACE
+target_include_directories(inverted_pendulum_bot.platform_abstraction PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(inverted_pendulum_bot.platform_abstraction INTERFACE
+target_link_libraries(inverted_pendulum_bot.platform_abstraction PUBLIC
     hal.interfaces
     hal.synchronous_interfaces
     services.tracer
@@ -14,9 +14,13 @@ target_link_libraries(inverted_pendulum_bot.platform_abstraction INTERFACE
 target_sources(inverted_pendulum_bot.platform_abstraction PRIVATE
     MotorBridge.hpp
     MotorDriver.hpp
-    WheelEncoders.hpp
     Platform.hpp
+    SignMagnitude.hpp
+    SignMagnitude.cpp
+    WheelEncoders.hpp
 )
+
+add_subdirectory(test)
 
 if (INVERTED_PENDULUM_BOT_BUILD_TESTS)
     add_subdirectory(test_doubles)
