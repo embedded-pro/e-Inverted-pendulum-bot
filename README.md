@@ -133,13 +133,14 @@ add new components.
 | [Safety Supervisor](documentation/design/safety-supervisor.md)                     | Arm/disarm/fault state machine and the disarm conditions                          |
 | [Balance Control](documentation/design/balance-control.md)                         | The selectable control-strategy interface and setpoint handling                   |
 | [Attitude Estimation](documentation/design/attitude-estimation.md)                 | Pitch estimation, bias calibration and estimate validity                          |
-| [Motion Actuation](documentation/design/motion-actuation.md)                       | Motor driver, effort mapping and quadrature decoding                              |
+| [Motion Actuation](documentation/design/motion-actuation.md)                       | Motor driver, effort mapping and the bridge disable states                        |
+| [Wheel Odometry Design](documentation/design/wheel-odometry.md)                    | Wrap-safe count accumulation, wheel velocity and chassis motion                   |
 | [BLE Service](documentation/design/ble-service.md)                                 | GATT layout for teleoperation, telemetry and tuning                               |
 | [Platform Abstraction](documentation/design/platform-abstraction.md)               | The peripheral roles each board must supply                                       |
 | [Pendulum Dynamics](documentation/theory/pendulum-dynamics.md)                     | Equations of motion, linearisation and the fall time constant                     |
 | [Control Laws](documentation/theory/control-laws.md)                               | Cascaded PID and LQR derived from the shared plant model                          |
 | [Pitch Estimation Theory](documentation/theory/attitude-estimation.md)             | Complementary and Kalman formulations, drift and noise                            |
-| [Wheel Odometry](documentation/theory/wheel-odometry.md)                           | Quadrature decoding and differential-drive kinematics                             |
+| [Wheel Odometry Theory](documentation/theory/wheel-odometry.md)                    | Quadrature decoding and differential-drive kinematics                             |
 | [Documentation Templates](documentation/templates/)                                | Starting points for new architecture/design/theory/requirements docs              |
 | [Performance Optimization Guide](documentation/performance-optimization/README.md) | Embedded performance techniques, assembly analysis, cycle budgets                 |
 | [AI Agent Instructions](CLAUDE.md)                                                 | Development guidelines, patterns, and constraints                                 |

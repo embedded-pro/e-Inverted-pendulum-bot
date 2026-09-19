@@ -1,6 +1,7 @@
 #include "core/cli/Cli.hpp"
 #include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/test_doubles/PlatformMock.hpp"
+#include "core/wheel_odometry/interfaces/WheelOdometry.hpp"
 #include "hal/interfaces/test_doubles/SerialCommunicationMock.hpp"
 #include "infra/stream/StringOutputStream.hpp"
 #include "infra/timer/test_helper/ClockFixture.hpp"
@@ -63,6 +64,17 @@ namespace
         MOCK_METHOD(void, ClearFault, (), (override));
     };
 
+    class WheelOdometryMock
+        : public odometry::WheelOdometry
+    {
+    public:
+        virtual ~WheelOdometryMock() = default;
+
+        MOCK_METHOD(odometry::WheelMotion, Left, (), (const, override));
+        MOCK_METHOD(odometry::WheelMotion, Right, (), (const, override));
+        MOCK_METHOD(odometry::ChassisMotion, Chassis, (), (const, override));
+    };
+
     class CliTest
         : public testing::Test
         , public infra::ClockFixture
@@ -102,12 +114,13 @@ namespace
         services::TracerToStream tracer{ stream };
         testing::StrictMock<platform::PlatformMock> platform;
         testing::StrictMock<MotionActuationMock> motionActuation;
+        testing::StrictMock<WheelOdometryMock> wheelOdometry;
     };
 }
 
 TEST_F(CliTest, greets_and_shows_a_prompt_on_construction)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_THAT(Output(), testing::HasSubstr("ready"));
     EXPECT_THAT(Output(), testing::HasSubstr("drive"));
@@ -116,7 +129,7 @@ TEST_F(CliTest, greets_and_shows_a_prompt_on_construction)
 
 TEST_F(CliTest, ping_replies_pong)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     Send("ping");
 
@@ -125,7 +138,7 @@ TEST_F(CliTest, ping_replies_pong)
 
 TEST_F(CliTest, id_prints_the_board_identifier)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     Send("id");
 
@@ -134,7 +147,7 @@ TEST_F(CliTest, id_prints_the_board_identifier)
 
 TEST_F(CliTest, drive_applies_both_efforts)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
     EXPECT_CALL(motionActuation, Apply(testing::FloatEq(0.3f), testing::FloatEq(-0.7f)));
@@ -146,7 +159,7 @@ TEST_F(CliTest, drive_applies_both_efforts)
 
 TEST_F(CliTest, drive_without_a_second_argument_prints_usage)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -157,7 +170,7 @@ TEST_F(CliTest, drive_without_a_second_argument_prints_usage)
 
 TEST_F(CliTest, drive_is_refused_while_a_fault_is_latched)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::driverFault));
 
@@ -168,7 +181,7 @@ TEST_F(CliTest, drive_is_refused_while_a_fault_is_latched)
 
 TEST_F(CliTest, tristate_releases_the_bridges)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Disable(motion::DisableState::tristate));
 
@@ -179,7 +192,7 @@ TEST_F(CliTest, tristate_releases_the_bridges)
 
 TEST_F(CliTest, brake_shorts_the_motors)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Disable(motion::DisableState::brake));
 
@@ -190,7 +203,7 @@ TEST_F(CliTest, brake_shorts_the_motors)
 
 TEST_F(CliTest, drive_with_a_missing_right_argument_is_rejected)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -201,7 +214,7 @@ TEST_F(CliTest, drive_with_a_missing_right_argument_is_rejected)
 
 TEST_F(CliTest, drive_with_a_non_numeric_argument_is_rejected)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -212,7 +225,7 @@ TEST_F(CliTest, drive_with_a_non_numeric_argument_is_rejected)
 
 TEST_F(CliTest, drive_with_a_trailing_third_argument_is_rejected)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -223,7 +236,7 @@ TEST_F(CliTest, drive_with_a_trailing_third_argument_is_rejected)
 
 TEST_F(CliTest, drive_with_a_partially_numeric_argument_is_rejected)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -234,11 +247,26 @@ TEST_F(CliTest, drive_with_a_partially_numeric_argument_is_rejected)
 
 TEST_F(CliTest, drive_with_an_over_long_argument_is_rejected)
 {
-    application::Cli cli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
     Send("drive 0.3 0.70000000000000");
 
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(CliTest, odom_reports_both_wheels_and_the_chassis)
+{
+    application::Cli cli{ platform, motionActuation, wheelOdometry };
+
+    EXPECT_CALL(wheelOdometry, Left()).WillOnce(testing::Return(odometry::WheelMotion{ 120, 3.5f }));
+    EXPECT_CALL(wheelOdometry, Right()).WillOnce(testing::Return(odometry::WheelMotion{ -40, -1.25f }));
+    EXPECT_CALL(wheelOdometry, Chassis()).WillOnce(testing::Return(odometry::ChassisMotion{ 0.04f, 0.5f }));
+
+    Send("odom");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("left 120 counts"));
+    EXPECT_THAT(Output(), testing::HasSubstr("right -40 counts"));
+    EXPECT_THAT(Output(), testing::HasSubstr("chassis"));
 }

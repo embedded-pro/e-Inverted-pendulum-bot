@@ -117,18 +117,18 @@ them.
 
 ### Provided
 
-| Interface                 | Purpose                                                         | Contract                                                                              |
-|---------------------------|-----------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| Inertial measurement role | Body-frame angular rate and acceleration                        | Fixed axis convention; failure and staleness reported explicitly, never substituted   |
-| Wheel encoder role        | Signed counts and index events for both wheels                  | Lossless across counter wrap; forward motion positive on both wheels                  |
-| Motor driver role         | The two motor bridges, plus notification when the driver faults | Tri-state reachable without a healthy control loop; a fault is reported, never polled |
-| Motor bridge role         | Two duty cycles, one per driver input                           | Both inputs low releases the bridge; the encoding is the driver's, not the board's    |
-| Bluetooth peripheral role | Advertising, connection, pairing, GATT database                 | Connection loss observable to the application                                         |
-| Parameter store role      | Persist and retrieve tuning parameters                          | Absence or failure is reported so the application can fall back to defaults           |
-| Timebase role             | Periodic scheduling and interval measurement                    | Monotonic; reports the measured interval                                              |
-| Status indicator role     | Visible heartbeat and mode indication                           | Never on a timing-critical path                                                       |
-| Trace role                | Diagnostic text output                                          | May be a no-op on a board without a channel; never blocks the control loop            |
-| Event loop                | Hand control to the platform's scheduler                        | Does not return on the target                                                         |
+| Interface                 | Purpose                                                         | Contract                                                                                                                   |
+|---------------------------|-----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| Inertial measurement role | Body-frame angular rate and acceleration                        | Fixed axis convention; failure and staleness reported explicitly, never substituted                                        |
+| Wheel encoder role        | Signed counts for both wheels, and the counter resolution       | Lossless across counter wrap; forward motion positive on both wheels; index events are not yet provided — see REQ-ODOM-005 |
+| Motor driver role         | The two motor bridges, plus notification when the driver faults | Tri-state reachable without a healthy control loop; a fault is reported, never polled                                      |
+| Motor bridge role         | Two duty cycles, one per driver input                           | Both inputs low releases the bridge; the encoding is the driver's, not the board's                                         |
+| Bluetooth peripheral role | Advertising, connection, pairing, GATT database                 | Connection loss observable to the application                                                                              |
+| Parameter store role      | Persist and retrieve tuning parameters                          | Absence or failure is reported so the application can fall back to defaults                                                |
+| Timebase role             | Periodic scheduling and interval measurement                    | Monotonic; reports the measured interval                                                                                   |
+| Status indicator role     | Visible heartbeat and mode indication                           | Never on a timing-critical path                                                                                            |
+| Trace role                | Diagnostic text output                                          | May be a no-op on a board without a channel; never blocks the control loop                                                 |
+| Event loop                | Hand control to the platform's scheduler                        | Does not return on the target                                                                                              |
 
 ### Required
 
@@ -140,15 +140,15 @@ them.
 
 ## Data Model
 
-| Entity          | Field        | Type / Unit                           | Range             | Notes                         |
-|-----------------|--------------|---------------------------------------|-------------------|-------------------------------|
-| Inertial sample | angularRate  | radians per second, three axes        | part-dependent    | Body frame, fixed convention  |
-| Inertial sample | acceleration | metres per second squared, three axes | part-dependent    | Body frame, fixed convention  |
-| Inertial sample | valid        | boolean                               | true or false     | False on transfer failure     |
-| Encoder sample  | counts       | signed counts per wheel               | full signed range | Accumulated across wrap       |
-| Encoder sample  | indexSeen    | boolean per wheel                     | true or false     | Advisory; never resets counts |
-| Effort command  | value        | normalised effort                     | -1.0 to 1.0       | Sign selects direction        |
-| Timebase        | interval     | microseconds                          | monotonic         | Measured, not nominal         |
+| Entity          | Field        | Type / Unit                           | Range             | Notes                                                              |
+|-----------------|--------------|---------------------------------------|-------------------|--------------------------------------------------------------------|
+| Inertial sample | angularRate  | radians per second, three axes        | part-dependent    | Body frame, fixed convention                                       |
+| Inertial sample | acceleration | metres per second squared, three axes | part-dependent    | Body frame, fixed convention                                       |
+| Inertial sample | valid        | boolean                               | true or false     | False on transfer failure                                          |
+| Encoder sample  | counts       | signed counts per wheel               | full signed range | Accumulated across wrap                                            |
+| Encoder sample  | indexSeen    | boolean per wheel                     | true or false     | Advisory; never resets counts. Not yet provided — see REQ-ODOM-005 |
+| Effort command  | value        | normalised effort                     | -1.0 to 1.0       | Sign selects direction                                             |
+| Timebase        | interval     | microseconds                          | monotonic         | Measured, not nominal                                              |
 
 ---
 
