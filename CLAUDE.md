@@ -17,12 +17,12 @@ testing.
 - `core/` — reusable libraries only (no application entry points).
   - `core/platform_abstraction/` — the `platform::Platform` interface (the seam
     between portable logic and hardware) plus a `PlatformMock` for tests.
-  - `core/blinky_cli/` — the headline portable application (LED blink + UART CLI),
+  - `core/cli/` — the headline portable application (LED blink + UART CLI),
     written against `platform::Platform` and unit-tested on the host with the mock.
   - `core/example_component/` — a trivial `interfaces/` + `implementations/` +
     `test/` example showing the component conventions.
 - `targets/` — application entry points and platform-specific implementations.
-  - `targets/blinky_cli/Main.cpp` — one platform-agnostic entry point reused for
+  - `targets/cli/Main.cpp` — one platform-agnostic entry point reused for
     host/st; it includes `PLATFORM_IMPL_HEADER` (set per platform in
     `targets/CMakeLists.txt`) to construct the selected `PlatformImpl`.
   - `targets/platform_implementations/{host,st}/PlatformImpl.*` — concrete
@@ -51,7 +51,7 @@ cmake --build --preset host-Debug
 # Run unit + integration tests
 ctest --preset host
 
-# Build the blinky_cli firmware for the board (.elf/.hex)
+# Build the cli firmware for the board (.elf/.hex)
 cmake --preset NUCLEO-WB55RG
 cmake --build --preset NUCLEO-WB55RG-Debug
 
@@ -89,6 +89,8 @@ path. Host tools, simulators, and test code may use normal heap patterns.
 
 ### Other Constraints
 
+- Headers start with `#pragma once`, never an `#ifndef` include guard. Enforced by
+  `amp.no-include-guards` in `.github/linters/goodcheck.yml`.
 - Prefer fixed-size integer types (`uint8_t`, `int32_t`).
 - Keep non-trivial logic in `.cpp` files; small `inline`/`constexpr` helpers in
   headers are allowed (and common in hot paths).
@@ -126,7 +128,7 @@ namespace example
   `interfaces/`, implementations in `implementations/`, tests in
   `implementations/test/`.
 - **New application**: write the logic in `core/` against `platform::Platform` (see
-  `core/blinky_cli/`); add a thin `targets/<app>/Main.cpp` that includes
+  `core/cli/`); add a thin `targets/<app>/Main.cpp` that includes
   `PLATFORM_IMPL_HEADER` and constructs it. Unit-test the logic on the host with
   `core/platform_abstraction/test_doubles/PlatformMock.hpp`.
 - **New platform peripheral**: add a method to `platform::Platform`, implement it in

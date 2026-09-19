@@ -28,7 +28,7 @@ date: 2026-09-16
 - Configuring the motor driver at startup and verifying the configuration by read-back.
 - Driving both full bridges directly, bypassing the driver's internal step sequencer.
 - Mapping a signed effort command onto bridge duty cycle and direction.
-- Providing coast and brake disable states, and guaranteeing coast is always reachable.
+- Providing tri-state and brake disable states, and guaranteeing the tri-state is always reachable.
 - Observing the driver's fault output and reporting it to the safety supervisor.
 - Decoding both quadrature encoders into signed wheel position and velocity.
 - Deriving chassis forward velocity and yaw rate from the two wheel velocities.
@@ -53,8 +53,14 @@ commanded brushed DC motors, per-motor current regulation, and a single fault ou
 configured over one serial channel.
 
 The consequence for this design is that bridge state is commanded by the firmware on every
-control iteration rather than delegated to the part. Phasing and dead-time behaviour become
-this component's concern.
+control iteration rather than delegated to the part. Each bridge takes **two logic-level
+inputs**, so one driver needs four PWM lines in total — not four per motor. The part
+generates its own gate drive and its own dead time, so the timer supplies plain
+logic-level PWM: no complementary outputs, and no dead-time generator on the
+microcontroller side.
+
+Because all four inputs belong to one driver, they are four channels of a single timer.
+They therefore share an update event, so both motors' duty cycles change together.
 
 ### Part B — Configuration and verification
 
@@ -74,14 +80,24 @@ Switching frequency sits above the audible band and is matched to the motor's el
 time constant: too low and the robot whines and the current ripples; too high and switching
 losses dominate.
 
-### Part D — Coast, brake, and why safety uses coast
+### Part D — Tri-state, brake, and why safety uses the tri-state
 
-Coasting opens both bridge legs, leaving the motor terminals floating; the robot's wheels
+Tri-stating opens both bridge legs, leaving the motor terminals floating; the robot's wheels
 turn freely. Braking shorts the terminals, dissipating kinetic energy and resisting motion.
 
-Safety-initiated disables always coast. A falling robot that brakes plants its wheels and
+Both states are reached through the same two inputs, and the encoding is easy to get
+backwards — driving both inputs low is a *tri-state*, not a brake:
+
+| Input 1 | Input 2 | Bridge         | Meaning   |
+|---------|---------|----------------|-----------|
+| low     | low     | released       | Tri-state |
+| PWM     | low     | driven forward | Forward   |
+| low     | PWM     | driven reverse | Reverse   |
+| high    | high    | both legs low  | Brake     |
+
+Safety-initiated disables always tri-state. A falling robot that brakes plants its wheels and
 converts a topple into a harder impact, and braking still drives current through the
-bridges at the moment a fault is suspected. Coast is also the state the hardware reaches
+bridges at the moment a fault is suspected. The tri-state is also what the hardware reaches
 without firmware cooperation, which is what makes it reachable when the control loop is
 already gone.
 
@@ -108,14 +124,14 @@ controller so that the wheel geometry is described in exactly one place.
 
 ### Provided
 
-| Interface          | Purpose                                        | Contract                                                                               |
-|--------------------|------------------------------------------------|----------------------------------------------------------------------------------------|
-| Effort application | Apply a signed effort to each motor            | Monotonic mapping to duty and direction; ignored unless the drive is permitted         |
-| Drive disable      | Coast or brake both bridges                    | Coast must succeed without a healthy control loop; safety disables always coast        |
-| Driver health      | Report driver-asserted faults                  | Latched on assertion, even if the condition clears immediately                         |
-| Wheel measurement  | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels                   |
-| Index events       | Once-per-revolution marker per wheel           | Reported without disturbing the accumulated count                                      |
-| Chassis motion     | Forward velocity and yaw rate                  | Derived from both wheels and the documented geometry; updated at the control-loop rate |
+| Interface          | Purpose                                        | Contract                                                                                    |
+|--------------------|------------------------------------------------|---------------------------------------------------------------------------------------------|
+| Effort application | Apply a signed effort to each motor            | Monotonic mapping to duty and direction; ignored unless the drive is permitted              |
+| Drive disable      | Tri-state or brake both bridges                | The tri-state must succeed without a healthy control loop; safety disables always tri-state |
+| Driver health      | Report driver-asserted faults                  | Latched on assertion, even if the condition clears immediately                              |
+| Wheel measurement  | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels                        |
+| Index events       | Once-per-revolution marker per wheel           | Reported without disturbing the accumulated count                                           |
+| Chassis motion     | Forward velocity and yaw rate                  | Derived from both wheels and the documented geometry; updated at the control-loop rate      |
 
 ### Required
 
@@ -134,7 +150,7 @@ controller so that the wheel geometry is described in exactly one place.
 | Entity            | Field                   | Type / Unit        | Range                                   | Notes                                          |
 |-------------------|-------------------------|--------------------|-----------------------------------------|------------------------------------------------|
 | Command           | effortLeft, effortRight | normalised effort  | -1.0 to 1.0                             | Sign selects direction                         |
-| Command           | disableState            | enumeration        | Coast, Brake                            | Safety paths use Coast exclusively             |
+| Command           | disableState            | enumeration        | Tri-state, Brake                        | Safety paths use the tri-state exclusively     |
 | Wheel measurement | position                | encoder counts     | full signed range                       | Accumulated across hardware wrap               |
 | Wheel measurement | angularVelocity         | radians per second | -105 to 105                             | Differenced over the measured interval         |
 | Chassis motion    | forwardVelocity         | metres per second  | -1.5 to 1.5                             | Mean of both wheels times wheel radius         |
@@ -154,14 +170,14 @@ stateDiagram-v2
     [*] --> Unconfigured
     Unconfigured --> Configured : Configuration written and read back
     Unconfigured --> Failed : Read-back mismatch or no response
-    Configured --> Coasting : Bridges enabled, zero effort
-    Coasting --> Driving : Drive permitted, non-zero effort
-    Driving --> Coasting : Drive permission withdrawn
+    Configured --> Tristated : Bridges enabled, zero effort
+    Tristated --> Driving : Drive permitted, non-zero effort
+    Driving --> Tristated : Drive permission withdrawn
     Driving --> Braking : Brake requested
-    Braking --> Coasting : Brake released
+    Braking --> Tristated : Brake released
     Driving --> Faulted : Driver asserted fault
-    Coasting --> Faulted : Driver asserted fault
-    Faulted --> Coasting : Fault cleared by the supervisor
+    Tristated --> Faulted : Driver asserted fault
+    Faulted --> Tristated : Fault cleared by the supervisor
     Failed --> [*]
 ```
 
@@ -182,7 +198,7 @@ sequenceDiagram
     Act->>Drv: Read configuration back
     Drv-->>Act: Configuration
     alt Matches
-        Act-->>Sup: Ready, bridges coasting
+        Act-->>Sup: Ready, bridges tri-stated
     else Mismatch
         Act-->>Sup: Driver identification failed
     end
@@ -198,7 +214,7 @@ sequenceDiagram
 
     Drv->>Act: Fault asserted
     Act->>Act: Latch cause
-    Act->>Drv: Disable both bridges (coast)
+    Act->>Drv: Disable both bridges (tri-state)
     Act-->>Sup: Driver fault
     Sup->>Sup: Mode = FAULT
     Note over Act: Latch persists even if the driver deasserts immediately
@@ -220,7 +236,7 @@ graph LR
     CFG[Configuration channel] --> BRIDGE
     BRIDGE -->|fault| LATCH[Fault latch]
     LATCH --> SUP[To safety supervisor]
-    SUP -->|coast| BRIDGE
+    SUP -->|tri-state| BRIDGE
 ```
 
 ---
@@ -229,7 +245,7 @@ graph LR
 
 | Constraint              | Value / Description                                                                                                                    |
 |-------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| Coast reachability      | Coasting must not depend on the control loop, the estimator or the link                                                                |
+| Tri-state reachability  | Tri-stating must not depend on the control loop, the estimator or the link                                                             |
 | Configuration trust     | An unverifiable driver configuration prevents startup rather than degrading operation                                                  |
 | Switching frequency     | Above 20 kHz and compatible with the motor electrical time constant                                                                    |
 | Current limit           | At or below the continuous rating of the fitted motors                                                                                 |

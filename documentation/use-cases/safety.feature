@@ -11,7 +11,7 @@ Feature: Safety supervision and shutdown
   Scenario: A fall disarms the drive
     When the body is tipped 40 degrees from upright
     Then the mode becomes FAULT within 20 milliseconds
-    And both motor bridges coast
+    And both motor bridges are tri-stated
     And the bridges are not actively braked
 
   @REQ-SAFE-002
@@ -31,13 +31,13 @@ Feature: Safety supervision and shutdown
   Scenario: Losing the attitude estimate disarms the robot
     When the attitude estimate becomes invalid
     Then the mode becomes FAULT
-    And both motor bridges coast
+    And both motor bridges are tri-stated
 
   @REQ-SAFE-008
   Scenario: A stalled control loop is detected
     When the balance control loop is not serviced for 3 consecutive periods
     Then the mode becomes FAULT
-    And both motor bridges coast
+    And both motor bridges are tri-stated
 
   @REQ-SAFE-004
   Scenario: Faults latch after the cause has cleared
@@ -61,8 +61,8 @@ Feature: Safety supervision and shutdown
     Then it does not exceed the continuous current rating of the fitted motors
 
   @REQ-DRIVE-006
-  Scenario: Both coast and brake are available, and safety uses coast
+  Scenario: Both tri-state and brake are available, and safety uses the tri-state
     Given the actuation component is available
-    When a coasting disable and a braked disable are each requested
+    When a tri-state disable and a braked disable are each requested
     Then both disable states are supported
-    And every safety-initiated disable uses the coasting state
+    And every safety-initiated disable uses the tri-state

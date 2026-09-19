@@ -5,8 +5,8 @@ Libraries with no `main` belong in [`core/`](../core).
 
 ```
 targets/
-├── blinky_cli/                   # Headline app: one Main.cpp reused on every platform
-│   └── Main.cpp                  #   includes PLATFORM_IMPL_HEADER, constructs BlinkyCli
+├── cli/                   # Headline app: one Main.cpp reused on every platform
+│   └── Main.cpp                  #   includes PLATFORM_IMPL_HEADER, constructs Cli
 ├── example_app/                  # Trivial host-only entry point (Accumulator demo)
 │   └── Main.cpp
 └── platform_implementations/
@@ -25,13 +25,13 @@ peripherals the application needs.
 that (a) defines `PLATFORM_IMPL_HEADER` pointing at the selected platform's
 `PlatformImpl.hpp` and (b) links its library. A target's `Main.cpp` includes that
 macro and constructs `application::PlatformImpl`, so the entry point stays
-platform-agnostic — the same `blinky_cli/Main.cpp` builds for host and ST.
+platform-agnostic — the same `cli/Main.cpp` builds for host and ST.
 
 - **host** builds under `cmake --preset host`.
 - **st** builds the `NUCLEO-WB55RG` firmware.
 
 ## Add a new application
 
-1. Put the portable logic in `core/` against `platform::Platform` (see `core/blinky_cli/`).
-2. Copy `blinky_cli/` to `targets/<your_app>/`; keep `Main.cpp` platform-agnostic.
+1. Put the portable logic in `core/` against `platform::Platform` (see `core/cli/`).
+2. Copy `cli/` to `targets/<your_app>/`; keep `Main.cpp` platform-agnostic.
 3. Add `add_subdirectory(<your_app>)` in `targets/CMakeLists.txt`.

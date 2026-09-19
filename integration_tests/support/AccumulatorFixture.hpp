@@ -1,5 +1,4 @@
-#ifndef INTEGRATION_TESTS_SUPPORT_ACCUMULATOR_FIXTURE_HPP
-#define INTEGRATION_TESTS_SUPPORT_ACCUMULATOR_FIXTURE_HPP
+#pragma once
 
 #include "core/example_component/implementations/AccumulatorImpl.hpp"
 
@@ -13,5 +12,3 @@ namespace integration
         example::AccumulatorImpl accumulator;
     };
 }
-
-#endif

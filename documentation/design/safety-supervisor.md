@@ -34,7 +34,7 @@ date: 2026-09-16
 
 **Is NOT responsible for:**
 - Computing effort commands — that is the balance controller's job.
-- Deciding *how* the motors are disabled at the hardware level — it requests a coast; the
+- Deciding *how* the motors are disabled at the hardware level — it requests a tri-state; the
   actuation component knows how to produce one.
 - Estimating attitude, or judging estimate quality beyond consuming the validity flag.
 - Any communication with the operator; it publishes mode and fault cause, and the
@@ -57,7 +57,7 @@ was.
 
 The supervisor compares the estimated pitch magnitude against the fall threshold on every
 balance iteration. Crossing the threshold is not a recoverable event: the robot has
-already lost the ability to catch itself, so the response is immediate coast and FAULT,
+already lost the ability to catch itself, so the response is an immediate tri-state and FAULT,
 not a controller intervention. The threshold is deliberately well outside the recoverable
 envelope — a 30-degree lean is the controller's problem; 35 degrees is the supervisor's.
 
@@ -103,7 +103,7 @@ so that behaviour never depends on history from a previous session.
 |---------------------|---------------------------------------------|----------------------------------------------------------------------------------|
 | Attitude estimate   | Detect falls and check arming preconditions | Carries an explicit validity indication; the supervisor treats invalid as unsafe |
 | Motor driver health | Observe driver-reported faults              | An asserted fault is latched even if it clears immediately afterwards            |
-| Drive disable       | Force both bridges to coast                 | Must succeed without a healthy control loop; coast, never brake                  |
+| Drive disable       | Force both bridges to tri-state             | Must succeed without a healthy control loop; tri-state, never brake              |
 | Strategy lifecycle  | Reset the active strategy on arming         | Reset completes before the drive is permitted                                    |
 | Timebase            | Drive liveness monitoring                   | Independent of the balance loop it supervises                                    |
 
@@ -129,7 +129,7 @@ stateDiagram-v2
     Fault --> Fault : Originating condition cleared (latched)
 ```
 
-Every edge into `Fault` coasts both bridges as its first action. There is deliberately no
+Every edge into `Fault` tri-states both bridges as its first action. There is deliberately no
 edge from `Fault` directly to `Armed`.
 
 ---
@@ -148,7 +148,7 @@ sequenceDiagram
 
     Est->>Sup: Pitch estimate, valid
     Note over Sup: Magnitude exceeds fall threshold
-    Sup->>Act: Coast both bridges
+    Sup->>Act: Tri-state both bridges
     Act-->>Sup: Bridges disabled
     Sup->>Ctrl: Disable, drop effort to zero
     Sup->>Sup: Latch cause = Fall
@@ -182,27 +182,27 @@ sequenceDiagram
 
 ## Data Model
 
-| Entity           | Field          | Type / Unit  | Range                                                                 | Notes                                          |
-|------------------|----------------|--------------|-----------------------------------------------------------------------|------------------------------------------------|
-| Supervisor state | mode           | enumeration  | INIT, CALIBRATING, IDLE, ARMED, FAULT                                 | Exactly one active                             |
-| Supervisor state | latchedCause   | enumeration  | None, Fall, DriverFault, EstimateInvalid, LoopStalled, SelfTestFailed | Meaningful only in FAULT                       |
-| Supervisor state | missedServices | count        | 0 to 3                                                                | Reset on each loop service; 3 triggers a fault |
-| Configuration    | fallThreshold  | degrees      | 35                                                                    | Magnitude of pitch from upright                |
-| Configuration    | armWindow      | degrees      | 5                                                                     | Maximum tilt permitted when arming             |
-| Configuration    | coastDeadline  | milliseconds | 20                                                                    | Budget from detection to bridges disabled      |
+| Entity           | Field            | Type / Unit  | Range                                                                 | Notes                                          |
+|------------------|------------------|--------------|-----------------------------------------------------------------------|------------------------------------------------|
+| Supervisor state | mode             | enumeration  | INIT, CALIBRATING, IDLE, ARMED, FAULT                                 | Exactly one active                             |
+| Supervisor state | latchedCause     | enumeration  | None, Fall, DriverFault, EstimateInvalid, LoopStalled, SelfTestFailed | Meaningful only in FAULT                       |
+| Supervisor state | missedServices   | count        | 0 to 3                                                                | Reset on each loop service; 3 triggers a fault |
+| Configuration    | fallThreshold    | degrees      | 35                                                                    | Magnitude of pitch from upright                |
+| Configuration    | armWindow        | degrees      | 5                                                                     | Maximum tilt permitted when arming             |
+| Configuration    | tristateDeadline | milliseconds | 20                                                                    | Budget from detection to bridges disabled      |
 
 ---
 
 ## Constraints & Limitations
 
-| Constraint            | Value / Description                                                                                                                         |
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| Fall-to-coast budget  | 20 ms from the estimate crossing the threshold to both bridges disabled                                                                     |
-| Liveness independence | The liveness monitor must not be driven by the loop it supervises                                                                           |
-| Disable path          | Reaching a safe state must not depend on the control loop, the estimator or the link                                                        |
-| No automatic recovery | There is no path from FAULT to ARMED without two separate operator commands                                                                 |
-| Flat ground only      | The fall threshold assumes a level surface; a sloped surface narrows the effective recoverable envelope                                     |
-| Detection scope       | The supervisor detects falls, not the causes of falls. A slipping wheel or a drained battery is visible only through its effect on attitude |
+| Constraint              | Value / Description                                                                                                                         |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Fall-to-tristate budget | 20 ms from the estimate crossing the threshold to both bridges disabled                                                                     |
+| Liveness independence   | The liveness monitor must not be driven by the loop it supervises                                                                           |
+| Disable path            | Reaching a safe state must not depend on the control loop, the estimator or the link                                                        |
+| No automatic recovery   | There is no path from FAULT to ARMED without two separate operator commands                                                                 |
+| Flat ground only        | The fall threshold assumes a level surface; a sloped surface narrows the effective recoverable envelope                                     |
+| Detection scope         | The supervisor detects falls, not the causes of falls. A slipping wheel or a drained battery is visible only through its effect on attitude |
 
 ---
 

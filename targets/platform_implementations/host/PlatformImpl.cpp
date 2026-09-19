@@ -17,6 +17,11 @@ namespace application
         return tracer;
     }
 
+    platform::MotorDriver& PlatformImpl::Motors()
+    {
+        return motors;
+    }
+
     void PlatformImpl::Run()
     {
         eventDispatcher.Run();

@@ -25,6 +25,4 @@ if (INVERTED_PENDULUM_BOT_TARGET_PLATFORM STREQUAL "host")
     add_subdirectory(example_app)
 endif()
 
-# blinky_cli is the headline application: LED blink + UART command-line interface,
-# written once against platform::Platform and built for host and ST.
-add_subdirectory(blinky_cli)
+add_subdirectory(cli)

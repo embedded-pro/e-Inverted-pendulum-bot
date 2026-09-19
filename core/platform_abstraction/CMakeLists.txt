@@ -7,10 +7,13 @@ target_include_directories(inverted_pendulum_bot.platform_abstraction INTERFACE
 
 target_link_libraries(inverted_pendulum_bot.platform_abstraction INTERFACE
     hal.interfaces
+    hal.synchronous_interfaces
     services.tracer
 )
 
 target_sources(inverted_pendulum_bot.platform_abstraction PRIVATE
+    MotorBridge.hpp
+    MotorDriver.hpp
     Platform.hpp
 )
 

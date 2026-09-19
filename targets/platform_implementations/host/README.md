@@ -10,5 +10,5 @@ off-target:
 - **Run** — runs the host `EventDispatcher`; a `hal::TimerServiceGeneric` provides
   the system timer.
 
-Built under the `host` preset. The portable logic it serves (`core/blinky_cli/`) is
+Built under the `host` preset. The portable logic it serves (`core/cli/`) is
 also unit-tested against `PlatformMock` rather than this implementation.

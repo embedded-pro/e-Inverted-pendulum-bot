@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_ST_PLATFORM_IMPL_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_ST_PLATFORM_IMPL_HPP
+#pragma once
 
 #include "core/platform_abstraction/Platform.hpp"
 #include "hal_st/instantiations/StmEventInfrastructure.hpp"
@@ -9,30 +8,23 @@
 #include "infra/stream/OutputStream.hpp"
 #include "services/tracer/StreamWriterOnSerialCommunication.hpp"
 #include "services/tracer/Tracer.hpp"
+#include "targets/platform_implementations/st/MotorDriverStm.hpp"
 
 namespace application
 {
-    // STM32 implementation of platform::Platform, shared by all supported ST board
-    // presets (see CMakePresets.json). The default clock configuration is selected
-    // per board via INVERTED_PENDULUM_BOT_ST_CLOCK_HEADER/INVERTED_PENDULUM_BOT_ST_CLOCK_INIT (set in
-    // targets/platform_implementations/st/CMakeLists.txt based on TARGET_MCU).
-    //
-    // - Status LED  : LD2 (green) on PB0
-    // - CLI UART    : USART1, TX = PB6, RX = PB7 (115200 8N1). On the
-    //                 NUCLEO-WB55RG this UART is routed to the on-board ST-LINK
-    //                 virtual COM port, so no USB-UART adapter is needed.
     class PlatformImpl final
         : public platform::Platform
     {
     public:
+        PlatformImpl() = default;
+
         hal::GpioPin& StatusLed() override;
         hal::SerialCommunication& Communication() override;
         services::Tracer& Tracer() override;
+        platform::MotorDriver& Motors() override;
         void Run() override;
 
     private:
-        // Initialises the STM32 HAL and system clock before any peripheral member
-        // is constructed. Declared first so its constructor runs first.
         struct ClockInit
         {
             ClockInit()
@@ -44,14 +36,18 @@ namespace application
 
         ClockInit clockInit;
         main_::StmEventInfrastructure eventInfrastructure;
+
         hal::GpioPinStm statusLed{ hal::Port::B, 0 };
-        hal::GpioPinStm uartTx{ hal::Port::B, 6 };
-        hal::GpioPinStm uartRx{ hal::Port::B, 7 };
-        hal::UartStm uart{ 1, uartTx, uartRx };
-        services::StreamWriterOnSerialCommunication::WithStorage<256> streamWriter{ uart };
+
+        // USART1 on the ST-LINK virtual COM port.
+        hal::GpioPinStm consoleTx{ hal::Port::B, 6 };
+        hal::GpioPinStm consoleRx{ hal::Port::B, 7 };
+        hal::UartStm console{ 1, consoleTx, consoleRx };
+
+        MotorDriverStm motors;
+
+        services::StreamWriterOnSerialCommunication::WithStorage<256> streamWriter{ console };
         infra::TextOutputStream::WithErrorPolicy stream{ streamWriter };
         services::TracerToStream tracer{ stream };
     };
 }
-
-#endif

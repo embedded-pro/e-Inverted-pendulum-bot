@@ -13,12 +13,17 @@ namespace application
 
     hal::SerialCommunication& PlatformImpl::Communication()
     {
-        return uart;
+        return console;
     }
 
     services::Tracer& PlatformImpl::Tracer()
     {
         return tracer;
+    }
+
+    platform::MotorDriver& PlatformImpl::Motors()
+    {
+        return motors;
     }
 
     void PlatformImpl::Run()

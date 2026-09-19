@@ -32,10 +32,11 @@
     exceed the continuous current rating of the fitted motors.
 
 - id: REQ-DRIVE-006
-  title: Selectable coast and brake
+  title: Selectable tri-state and brake
   shall: >
-    The actuation component shall provide both a coasting and an actively braked
-    disable state, and shall use coasting for all safety-initiated disables.
+    The actuation component shall provide both a high-impedance tri-state and an
+    actively braked disable state, and shall use the tri-state for all
+    safety-initiated disables.
 
 - id: REQ-DRIVE-007
   title: Commutation frequency

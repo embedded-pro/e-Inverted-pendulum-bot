@@ -1,3 +1,4 @@
 add_subdirectory(example_component)
 add_subdirectory(platform_abstraction)
-add_subdirectory(blinky_cli)
+add_subdirectory(cli)
+add_subdirectory(motion_actuation)
