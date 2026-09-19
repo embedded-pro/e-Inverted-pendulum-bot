@@ -75,6 +75,11 @@ Feature: Sensing, attitude estimation and wheel odometry
     When the wheel velocity is read at the control-loop rate
     Then the reported left wheel angular velocity is within 2 percent of 5 revolutions per second
 
+  # Deferred: the second Then holds today - nothing consults the index, so it cannot disturb
+  # the count - but the first is not yet implemented. The portable encoder abstraction has no
+  # index accessor, and the hardware layer offers only a bare level read with no latch or
+  # interrupt, so a once-per-revolution pulse cannot be caught by polling. Tracked as open
+  # question 1 in documentation/design/wheel-odometry.md.
   @REQ-ODOM-005
   Scenario: The index pulse does not disturb the count
     Given the left wheel is turning continuously

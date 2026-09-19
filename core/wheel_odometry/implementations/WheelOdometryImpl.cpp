@@ -2,6 +2,15 @@
 #include "infra/util/ReallyAssert.hpp"
 #include <numbers>
 
+namespace
+{
+    std::chrono::microseconds VerifiedSamplePeriod(std::chrono::microseconds samplePeriod)
+    {
+        really_assert(samplePeriod.count() > 0);
+        return samplePeriod;
+    }
+}
+
 namespace odometry
 {
     WheelOdometryImpl::Config::Config() = default;
@@ -9,12 +18,11 @@ namespace odometry
     WheelOdometryImpl::WheelOdometryImpl(platform::WheelEncoders& encoders, const Config& config)
         : encoders(encoders)
         , config(config)
-        , sampleTimer{ config.samplePeriod, [this]()
+        , sampleTimer{ VerifiedSamplePeriod(config.samplePeriod), [this]()
             {
                 Sample();
             } }
     {
-        really_assert(config.samplePeriod.count() > 0);
         really_assert(config.wheelRadius > 0.0f);
         really_assert(config.trackWidth > 0.0f);
         really_assert(config.gearRatio > 0.0f);

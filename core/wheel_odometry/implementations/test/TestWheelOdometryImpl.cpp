@@ -120,6 +120,24 @@ TEST_F(WheelOdometryImplTest, a_reverse_wrap_is_a_small_step_not_a_revolution_fo
     EXPECT_EQ(-16, Odometry().Right().position);
 }
 
+TEST_F(WheelOdometryImplTest, exactly_half_a_revolution_resolves_by_the_order_of_the_readings)
+{
+    Sample(0, 0);
+    Sample(resolution / 2, resolution / 2);
+
+    EXPECT_EQ(static_cast<int32_t>(resolution / 2), Odometry().Left().position);
+    EXPECT_EQ(static_cast<int32_t>(resolution / 2), Odometry().Right().position);
+}
+
+TEST_F(WheelOdometryImplTest, exactly_half_a_revolution_read_the_other_way_round_is_negative)
+{
+    Sample(resolution / 2, resolution / 2);
+    Sample(0, 0);
+
+    EXPECT_EQ(-static_cast<int32_t>(resolution / 2), Odometry().Left().position);
+    EXPECT_EQ(-static_cast<int32_t>(resolution / 2), Odometry().Right().position);
+}
+
 TEST_F(WheelOdometryImplTest, position_survives_repeated_wraps_in_one_direction)
 {
     Sample(0, 0);

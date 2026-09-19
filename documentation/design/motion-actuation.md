@@ -282,4 +282,4 @@ graph LR
 |---|-----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------|
 | 1 | Should effort compensate for measured battery voltage so torque per unit effort stays constant as the battery drains? | Leave to the balance loops; add feed-forward compensation                    | open   |
 | 2 | Fast or slow current decay mode for the bridges?                                                                      | Depends on measured current ripple against motor inductance                  | open   |
-| 5 | Should the driver's current regulation be relied upon, or a separate measurement taken?                               | Rely on the driver; add sensing for telemetry and stall detection            | open   |
+| 3 | Should the driver's current regulation be relied upon, or a separate measurement taken?                               | Rely on the driver; add sensing for telemetry and stall detection            | open   |
