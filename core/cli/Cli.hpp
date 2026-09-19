@@ -32,8 +32,6 @@ namespace application
             services::Tracer& tracer;
             motion::MotionActuation& motionActuation;
 
-            // Owned per instance rather than function-local static: the handlers
-            // capture this, so a shared array would outlive the object it points at.
             std::array<Command, 5> commands;
         };
 

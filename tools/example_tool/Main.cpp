@@ -2,12 +2,6 @@
 #include <cstdio>
 #include <cstdlib>
 
-// Example host tool: sums its integer arguments using the shared core library.
-//
-//     inverted_pendulum_bot.tool.example 2 3 4   ->  total = 9
-//
-// Tools live on the host and may use the heap / standard library freely; they
-// reuse core libraries rather than duplicating logic.
 int main(int argc, const char* const argv[])
 {
     example::AccumulatorImpl accumulator;

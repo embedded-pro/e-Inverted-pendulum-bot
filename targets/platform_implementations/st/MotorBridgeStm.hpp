@@ -8,15 +8,6 @@
 
 namespace application
 {
-    // One motor driven sign-magnitude: a single PWM line into the driver's first
-    // input, and the second input held as a direction level. One timer channel per
-    // motor instead of two, which is what leaves TIM1 and TIM2 free to decode both
-    // wheel encoders in hardware.
-    //
-    // The direction decides which decay mode the bridge falls into. Forward toggles
-    // between driven and released; reverse toggles between driven and shorted, so
-    // reverse recirculates through the low side and forward does not. Commanded
-    // magnitudes match, current ripple does not.
     class MotorBridgeStm final
         : public platform::MotorBridge
     {

@@ -4,8 +4,6 @@
 
 namespace application
 {
-    // Accepts every command and drives nothing, so the whole control stack is
-    // constructible on the host. A simulated plant replaces this later.
     class MotorBridgeStub final
         : public platform::MotorBridge
     {

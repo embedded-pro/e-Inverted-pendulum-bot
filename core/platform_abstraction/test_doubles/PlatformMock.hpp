@@ -9,8 +9,6 @@ namespace platform
         : public Platform
     {
     public:
-        // Not final, and with a public virtual destructor: StrictMock<> derives from it
-        // and tests instantiate it directly.
         virtual ~PlatformMock() = default;
 
         MOCK_METHOD(hal::GpioPin&, StatusLed, (), (override));

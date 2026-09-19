@@ -41,7 +41,6 @@ namespace application
 
         hal::GpioPinStm statusLed{ hal::Port::B, 0 };
 
-        // USART1 on the ST-LINK virtual COM port.
         hal::GpioPinStm consoleTx{ hal::Port::B, 6 };
         hal::GpioPinStm consoleRx{ hal::Port::B, 7 };
         hal::UartStm console{ 1, consoleTx, consoleRx };

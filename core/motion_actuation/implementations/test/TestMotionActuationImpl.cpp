@@ -117,8 +117,6 @@ TEST_F(MotionActuationImplTest, tristate_releases_both_bridges)
     actuation->Disable(motion::DisableState::tristate);
 }
 
-// Both inputs high turns both low-side transistors on, which shorts the motor.
-// Both inputs low tri-states the outputs instead, which is not a brake.
 TEST_F(MotionActuationImplTest, brake_drives_both_inputs_high)
 {
     EXPECT_CALL(left, Start(hal::Percent{ 100 }, hal::Percent{ 100 }));
@@ -143,7 +141,6 @@ TEST_F(MotionActuationImplTest, fault_stays_latched_and_ignores_effort_until_cle
     EXPECT_CALL(right, Stop());
     onFault();
 
-    // No Start() expectation: a strict mock fails the test if effort reaches a bridge.
     actuation->Apply(0.5f, 0.5f);
     EXPECT_EQ(motion::FaultCause::driverFault, actuation->Fault());
 

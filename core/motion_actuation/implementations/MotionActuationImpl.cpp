@@ -6,9 +6,6 @@ namespace motion
 {
     namespace
     {
-        // infra::Quantity is not a literal type, so these are functions rather
-        // than constexpr objects; a namespace-scope object would need dynamic
-        // initialization on target.
         hal::Percent Off()
         {
             return hal::Percent{ 0 };
@@ -56,8 +53,6 @@ namespace motion
         ApplyTo(motors.Right(), effortRight);
     }
 
-    // Magnitude selects duty, sign selects which input carries it. Monotonic, so a
-    // change in commanded effort always moves the wheel the same way.
     void MotionActuationImpl::ApplyTo(platform::MotorBridge& bridge, float effort) const
     {
         const auto clamped = std::clamp(effort, -1.0f, 1.0f);
@@ -73,8 +68,6 @@ namespace motion
     {
         if (state == DisableState::brake)
         {
-            // Both inputs high turns both low-side transistors on, shorting the
-            // motor. Both inputs low would tri-state the outputs instead.
             motors.Left().Start(Full(), Full());
             motors.Right().Start(Full(), Full());
         }

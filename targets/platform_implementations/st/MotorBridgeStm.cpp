@@ -26,9 +26,6 @@ namespace application
         pwm.SetBaseFrequency(baseFrequency);
     }
 
-    // Both inputs arrive as duty cycles, but only the first is a timer channel here.
-    // Both high is the brake; otherwise the zero input picks the direction and the
-    // other carries the magnitude.
     void MotorBridgeStm::Start(hal::Percent input1, hal::Percent input2)
     {
         if (input1 == Full() && input2 == Full())
@@ -43,8 +40,6 @@ namespace application
         }
         else
         {
-            // Reverse recirculates through the brake state, so the duty cycle that
-            // produces the commanded magnitude is its complement.
             direction.Set(true);
             pwm.Start(Full() - input2);
         }

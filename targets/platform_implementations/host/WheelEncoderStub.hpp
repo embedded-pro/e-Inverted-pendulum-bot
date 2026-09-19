@@ -4,8 +4,6 @@
 
 namespace application
 {
-    // A stationary wheel, so the whole stack is constructible on the host. A
-    // simulated plant replaces this later.
     class WheelEncoderStub final
         : public hal::SynchronousQuadratureEncoder
     {

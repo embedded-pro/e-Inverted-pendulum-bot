@@ -11,9 +11,6 @@ namespace motion
     public:
         struct Config
         {
-            // Defaulted out of line: the constructor below takes a Config()
-            // default argument, and defining this one here would need the
-            // initializer below before the enclosing class is complete.
             Config();
 
             hal::Hertz switchingFrequency{ 25000 };
@@ -32,8 +29,6 @@ namespace motion
     private:
         void ApplyTo(platform::MotorBridge& bridge, float effort) const;
 
-        // Non-virtual: reached from the constructor and destructor, where a
-        // virtual Disable() would not dispatch to an override anyway.
         void ReleaseBridges() const;
 
         void OnFault();
