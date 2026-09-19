@@ -2,16 +2,18 @@
 
 #include "core/platform_abstraction/MotorDriver.hpp"
 #include "hal_st/stm32fxxx/GpioStm.hpp"
-#include "hal_st/synchronous_stm32fxxx/SynchronousPwmStm.hpp"
 #include "targets/platform_implementations/st/MotorBridgeStm.hpp"
-#include <array>
 
 namespace application
 {
-    // A DRV8711 driving two brushed motors from its two full bridges. In direct
-    // PWM mode it takes four logic-level inputs and generates its own gate drive
-    // and dead time, so the timer needs neither complementary outputs nor a
+    // A DRV8711 driving two brushed motors from its two full bridges. In direct PWM
+    // mode it takes two logic-level inputs per bridge and generates its own gate
+    // drive and dead time, so the timer needs neither complementary outputs nor a
     // dead-time generator.
+    //
+    // Each motor takes one channel of a single-channel timer, leaving the two
+    // encoder-capable timers for the wheels. The cost is that the two motors no
+    // longer share an update event, so their switching edges are not phase-locked.
     class MotorDriverStm final
         : public platform::MotorDriver
     {
@@ -26,16 +28,15 @@ namespace application
     private:
         static hal::PwmStmBase::Config PwmConfig();
 
-        hal::GpioPinStm leftInput1{ hal::Port::A, 8 };   // TIM1_CH1 -> AIN1
-        hal::GpioPinStm leftInput2{ hal::Port::A, 9 };   // TIM1_CH2 -> AIN2
-        hal::GpioPinStm rightInput1{ hal::Port::A, 10 }; // TIM1_CH3 -> BIN1
-        hal::GpioPinStm rightInput2{ hal::Port::A, 11 }; // TIM1_CH4 -> BIN2
-        hal::GpioPinStm breakPin{ hal::Port::B, 12 };    // TIM1_BKIN <- nFAULT
-        hal::GpioPinStm faultPin{ hal::Port::C, 4 };     // nFAULT, for the software latch
+        hal::GpioPinStm leftPwm{ hal::Port::B, 8 };        // TIM16_CH1 -> AIN1
+        hal::GpioPinStm leftDirection{ hal::Port::C, 0 };  // AIN2
+        hal::GpioPinStm leftBreak{ hal::Port::B, 5 };      // TIM16_BKIN <- nFAULT
 
-        std::array<hal::PwmStmBase::ChannelConfig, 4> channels;
-        hal::SynchronousPwmStm pwm;
-        std::array<hal::Percent, 4> dutyCycles{ { hal::Percent{ 0 }, hal::Percent{ 0 }, hal::Percent{ 0 }, hal::Percent{ 0 } } };
+        hal::GpioPinStm rightPwm{ hal::Port::B, 9 };       // TIM17_CH1 -> BIN1
+        hal::GpioPinStm rightDirection{ hal::Port::C, 1 }; // BIN2
+        hal::GpioPinStm rightBreak{ hal::Port::B, 4 };     // TIM17_BKIN <- nFAULT
+
+        hal::GpioPinStm faultPin{ hal::Port::C, 4 };       // nFAULT, for the software latch
 
         MotorBridgeStm left;
         MotorBridgeStm right;

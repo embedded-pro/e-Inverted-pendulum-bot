@@ -17,6 +17,7 @@ namespace platform
         MOCK_METHOD(hal::SerialCommunication&, Communication, (), (override));
         MOCK_METHOD(services::Tracer&, Tracer, (), (override));
         MOCK_METHOD(MotorDriver&, Motors, (), (override));
+        MOCK_METHOD(WheelEncoders&, Encoders, (), (override));
         MOCK_METHOD(void, Run, (), (override));
     };
 }

@@ -26,6 +26,11 @@ namespace application
         return motors;
     }
 
+    platform::WheelEncoders& PlatformImpl::Encoders()
+    {
+        return encoders;
+    }
+
     void PlatformImpl::Run()
     {
         eventInfrastructure.Run();

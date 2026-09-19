@@ -18,6 +18,8 @@ target_sources(inverted_pendulum_bot.platform_host PRIVATE
     GpioStub.hpp
     MotorBridgeStub.hpp
     MotorDriverStub.hpp
+    WheelEncoderStub.hpp
+    WheelEncodersStub.hpp
     PlatformImpl.hpp
     PlatformImpl.cpp
 )

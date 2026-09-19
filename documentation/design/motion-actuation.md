@@ -59,8 +59,17 @@ generates its own gate drive and its own dead time, so the timer supplies plain
 logic-level PWM: no complementary outputs, and no dead-time generator on the
 microcontroller side.
 
-Because all four inputs belong to one driver, they are four channels of a single timer.
-They therefore share an update event, so both motors' duty cycles change together.
+Only one of a bridge's two inputs has to carry a duty cycle. Holding the other as a
+direction level drives the motor sign-magnitude, which costs one timer channel per motor
+instead of two. That matters because the two channels it frees are the only two the part
+can decode quadrature on, and both wheels need one — see the platform design for the
+allocation.
+
+The choice is not free. Forward toggles the bridge between driven and released, reverse
+between driven and shorted, so the two directions recirculate differently and their current
+ripple is not symmetric. Commanded magnitude is unaffected and the effort mapping stays
+monotonic, which is what Part C requires. The two motors also no longer share a timer, so
+their switching edges are not phase-locked.
 
 ### Part B — Configuration and verification
 
@@ -109,8 +118,8 @@ that is immune to the hardware counter wrapping. The index channel is reported a
 for diagnostics and homing but is never allowed to reset the incremental count — a spurious
 index pulse must not teleport the robot's odometry.
 
-The two wheels are mirrored physically, so one wheel's raw count is negated before use; both
-report positive displacement for forward robot motion.
+The two wheels are mirrored physically, so one encoder is configured with an inverted phase;
+both then count up for forward robot motion and no sign correction is needed downstream.
 
 ### Part F — Chassis motion
 

@@ -8,6 +8,7 @@
 #include "services/tracer/Tracer.hpp"
 #include "targets/platform_implementations/host/GpioStub.hpp"
 #include "targets/platform_implementations/host/MotorDriverStub.hpp"
+#include "targets/platform_implementations/host/WheelEncodersStub.hpp"
 
 namespace application
 {
@@ -19,6 +20,7 @@ namespace application
         hal::SerialCommunication& Communication() override;
         services::Tracer& Tracer() override;
         platform::MotorDriver& Motors() override;
+        platform::WheelEncoders& Encoders() override;
         void Run() override;
 
     private:
@@ -29,5 +31,6 @@ namespace application
         infra::StringOutputStream::WithStorage<1024> stream;
         services::TracerToStream tracer{ stream };
         MotorDriverStub motors;
+        WheelEncodersStub encoders;
     };
 }

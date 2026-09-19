@@ -9,8 +9,8 @@ namespace application
         // Centre-aligned keeps current ripple low through a brushed motor.
         config.alignment = hal::PwmStmBase::Alignment::centerAlignedBothCounting;
 
-        // nFAULT reaches the break input, so a fault releases all four outputs in
-        // hardware without firmware cooperation.
+        // nFAULT reaches both timers' break inputs, so a fault releases the outputs
+        // in hardware without firmware cooperation.
         hal::PwmStmBase::BreakInput breakInput;
         breakInput.activeHigh = false;
         config.breakInput = breakInput;
@@ -19,13 +19,8 @@ namespace application
     }
 
     MotorDriverStm::MotorDriverStm()
-        : channels{ { { 1, leftInput1 },
-              { 2, leftInput2 },
-              { 3, rightInput1 },
-              { 4, rightInput2 } } }
-        , pwm(1, channels, breakPin, PwmConfig())
-        , left(pwm, dutyCycles, 0)
-        , right(pwm, dutyCycles, 2)
+        : left(16, leftPwm, leftBreak, leftDirection, PwmConfig())
+        , right(17, rightPwm, rightBreak, rightDirection, PwmConfig())
     {}
 
     platform::MotorBridge& MotorDriverStm::Left()
