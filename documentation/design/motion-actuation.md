@@ -156,33 +156,33 @@ the wheel odometry component's, and is described in `documentation/design/wheel-
 
 ### Provided
 
-| Interface          | Purpose                                        | Contract                                                                                    |
-|--------------------|------------------------------------------------|---------------------------------------------------------------------------------------------|
-| Effort application | Apply a signed effort to each motor            | Monotonic mapping to duty and direction; ignored unless the drive is permitted              |
-| Drive disable      | Tri-state or brake both bridges                | The tri-state must succeed without a healthy control loop; safety disables always tri-state |
-| Driver health      | Report driver-asserted faults                  | Latched on assertion, even if the condition clears immediately                              |
-| Wheel encoders     | Access to both decoded encoder counters        | Already sign-corrected for the mirrored mounting; consumed by wheel odometry                |
+| Interface          | Purpose                                 | Contract                                                                                    |
+|--------------------|-----------------------------------------|---------------------------------------------------------------------------------------------|
+| Effort application | Apply a signed effort to each motor     | Monotonic mapping to duty and direction; ignored unless the drive is permitted              |
+| Drive disable      | Tri-state or brake both bridges         | The tri-state must succeed without a healthy control loop; safety disables always tri-state |
+| Driver health      | Report driver-asserted faults           | Latched on assertion, even if the condition clears immediately                              |
+| Wheel encoders     | Access to both decoded encoder counters | Already sign-corrected for the mirrored mounting; consumed by wheel odometry                |
 
 ### Required
 
-| Interface                    | Purpose                                  | Contract                                                  |
-|------------------------------|------------------------------------------|-----------------------------------------------------------|
-| Driver configuration channel | Write and read back driver configuration | Read-back mismatch is a fatal startup condition           |
-| Bridge control outputs       | Duty and direction per bridge            | Switching frequency above the audible band                |
-| Driver fault input           | Observe the driver's fault assertion     | Observable without polling the configuration channel      |
-| Encoder channel inputs       | A, B and index per wheel                 | Decoded without losing edges at maximum wheel speed       |
+| Interface                    | Purpose                                  | Contract                                             |
+|------------------------------|------------------------------------------|------------------------------------------------------|
+| Driver configuration channel | Write and read back driver configuration | Read-back mismatch is a fatal startup condition      |
+| Bridge control outputs       | Duty and direction per bridge            | Switching frequency above the audible band           |
+| Driver fault input           | Observe the driver's fault assertion     | Observable without polling the configuration channel |
+| Encoder channel inputs       | A, B and index per wheel                 | Decoded without losing edges at maximum wheel speed  |
 
 ---
 
 ## Data Model
 
-| Entity            | Field                   | Type / Unit        | Range                                   | Notes                                          |
-|-------------------|-------------------------|--------------------|-----------------------------------------|------------------------------------------------|
-| Command           | effortLeft, effortRight | normalised effort  | -1.0 to 1.0                             | Sign selects direction                         |
-| Command           | disableState            | enumeration        | Tri-state, Brake                        | Safety paths use the tri-state exclusively     |
-| Encoder           | countsPerRevolution     | counts             | fitted value                            | Four times the encoder line count              |
-| Configuration     | currentLimit            | amperes            | at or below the motor continuous rating | Verified by read-back                          |
-| Configuration     | switchingFrequency      | kilohertz          | above 20                                | Above the audible band                         |
+| Entity        | Field                   | Type / Unit       | Range                                   | Notes                                      |
+|---------------|-------------------------|-------------------|-----------------------------------------|--------------------------------------------|
+| Command       | effortLeft, effortRight | normalised effort | -1.0 to 1.0                             | Sign selects direction                     |
+| Command       | disableState            | enumeration       | Tri-state, Brake                        | Safety paths use the tri-state exclusively |
+| Encoder       | countsPerRevolution     | counts            | fitted value                            | Four times the encoder line count          |
+| Configuration | currentLimit            | amperes           | at or below the motor continuous rating | Verified by read-back                      |
+| Configuration | switchingFrequency      | kilohertz         | above 20                                | Above the audible band                     |
 
 ---
 
@@ -278,8 +278,8 @@ graph LR
 
 ## Open Questions
 
-| # | Question                                                                                                              | Options                                                                      | Status |
-|---|-----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------|
-| 1 | Should effort compensate for measured battery voltage so torque per unit effort stays constant as the battery drains? | Leave to the balance loops; add feed-forward compensation                    | open   |
-| 2 | Fast or slow current decay mode for the bridges?                                                                      | Depends on measured current ripple against motor inductance                  | open   |
-| 3 | Should the driver's current regulation be relied upon, or a separate measurement taken?                               | Rely on the driver; add sensing for telemetry and stall detection            | open   |
+| # | Question                                                                                                              | Options                                                           | Status |
+|---|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|--------|
+| 1 | Should effort compensate for measured battery voltage so torque per unit effort stays constant as the battery drains? | Leave to the balance loops; add feed-forward compensation         | open   |
+| 2 | Fast or slow current decay mode for the bridges?                                                                      | Depends on measured current ripple against motor inductance       | open   |
+| 3 | Should the driver's current regulation be relied upon, or a separate measurement taken?                               | Rely on the driver; add sensing for telemetry and stall detection | open   |
