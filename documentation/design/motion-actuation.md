@@ -88,12 +88,12 @@ turn freely. Braking shorts the terminals, dissipating kinetic energy and resist
 Both states are reached through the same two inputs, and the encoding is easy to get
 backwards — driving both inputs low is a *coast*, not a brake:
 
-| Input 1 | Input 2 | Bridge          | Meaning |
-|---------|---------|-----------------|---------|
-| low     | low     | released        | Coast   |
-| PWM     | low     | driven forward  | Forward |
-| low     | PWM     | driven reverse  | Reverse |
-| high    | high    | both legs low   | Brake   |
+| Input 1 | Input 2 | Bridge         | Meaning |
+|---------|---------|----------------|---------|
+| low     | low     | released       | Coast   |
+| PWM     | low     | driven forward | Forward |
+| low     | PWM     | driven reverse | Reverse |
+| high    | high    | both legs low  | Brake   |
 
 Safety-initiated disables always coast. A falling robot that brakes plants its wheels and
 converts a topple into a harder impact, and braking still drives current through the

@@ -40,7 +40,6 @@ namespace motion
         void OnFault();
 
         platform::MotorDriver& motors;
-        Config config;
         FaultCause fault{ FaultCause::none };
     };
 }

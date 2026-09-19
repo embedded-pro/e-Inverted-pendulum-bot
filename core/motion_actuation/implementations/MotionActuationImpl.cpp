@@ -29,7 +29,6 @@ namespace motion
 
     MotionActuationImpl::MotionActuationImpl(platform::MotorDriver& motors, const Config& config)
         : motors(motors)
-        , config(config)
     {
         motors.Left().SetBaseFrequency(config.switchingFrequency);
         motors.Right().SetBaseFrequency(config.switchingFrequency);
