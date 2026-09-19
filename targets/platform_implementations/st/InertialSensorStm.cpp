@@ -1,16 +1,8 @@
 #include "targets/platform_implementations/st/InertialSensorStm.hpp"
 #include "infra/util/ReallyAssert.hpp"
-#include <array>
-#include <numbers>
 
 namespace application
 {
-    namespace
-    {
-        constexpr float milliDegreePerSecondToRadianPerSecond = std::numbers::pi_v<float> / 180000.0f;
-        constexpr float milliMeterPerSecondSquaredToMeterPerSecondSquared = 0.001f;
-    }
-
     drivers::Mpu9250Core::Config InertialSensorStm::DeviceConfig()
     {
         drivers::Mpu9250Core::Config config;
@@ -38,25 +30,14 @@ namespace application
 
     InertialSensorStm::InertialSensorStm() = default;
 
-    platform::InertialAxes InertialSensorStm::ToBodyFrame(float first, float second, float third) const
-    {
-        const std::array<float, 3> sensor{ { first, second, third } };
-
-        return {
-            axisMap.xSign * sensor[axisMap.xFrom],
-            axisMap.ySign * sensor[axisMap.yFrom],
-            axisMap.zSign * sensor[axisMap.zFrom]
-        };
-    }
-
     void InertialSensorStm::OnAcceleration(drivers::Mpu9250Core::Accelerometer::Samples samples)
     {
         really_assert(samples.size() == 3);
 
-        pending.acceleration = ToBodyFrame(
-            static_cast<float>(samples[0].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared,
-            static_cast<float>(samples[1].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared,
-            static_cast<float>(samples[2].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared);
+        pending.acceleration = platform::ToBodyFrame(axisMap,
+            platform::MilliMeterPerSecondSquaredToMeterPerSecondSquared(samples[0].Value()),
+            platform::MilliMeterPerSecondSquaredToMeterPerSecondSquared(samples[1].Value()),
+            platform::MilliMeterPerSecondSquaredToMeterPerSecondSquared(samples[2].Value()));
 
         pending.sampledAt = infra::Now();
         accelerationReceived = true;
@@ -71,10 +52,10 @@ namespace application
 
         accelerationReceived = false;
 
-        pending.angularRate = ToBodyFrame(
-            static_cast<float>(samples[0].Value()) * milliDegreePerSecondToRadianPerSecond,
-            static_cast<float>(samples[1].Value()) * milliDegreePerSecondToRadianPerSecond,
-            static_cast<float>(samples[2].Value()) * milliDegreePerSecondToRadianPerSecond);
+        pending.angularRate = platform::ToBodyFrame(axisMap,
+            platform::MilliDegreePerSecondToRadianPerSecond(samples[0].Value()),
+            platform::MilliDegreePerSecondToRadianPerSecond(samples[1].Value()),
+            platform::MilliDegreePerSecondToRadianPerSecond(samples[2].Value()));
 
         pending.valid = true;
 

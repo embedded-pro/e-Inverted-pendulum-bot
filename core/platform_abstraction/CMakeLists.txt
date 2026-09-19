@@ -13,6 +13,8 @@ target_link_libraries(inverted_pendulum_bot.platform_abstraction PUBLIC
 )
 
 target_sources(inverted_pendulum_bot.platform_abstraction PRIVATE
+    InertialFrame.hpp
+    InertialFrame.cpp
     InertialSensor.hpp
     MotorBridge.hpp
     MotorDriver.hpp
