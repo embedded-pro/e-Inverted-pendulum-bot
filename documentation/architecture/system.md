@@ -99,7 +99,7 @@ graph TD
 | Sub-component             | Responsibility                                                                                                        |
 |---------------------------|-----------------------------------------------------------------------------------------------------------------------|
 | Inertial sensing          | Acquire calibrated angular rate and acceleration in the body frame; signal staleness and transfer failure             |
-| Wheel odometry            | Accumulate the decoded encoder counts into signed wheel position and velocity; derive chassis forward velocity and yaw rate |
+| Wheel odometry            | Accumulate decoded counts into signed wheel position and velocity; derive chassis forward velocity and yaw rate       |
 | Attitude estimation       | Fuse inertial measurements into body pitch and pitch rate with an explicit validity indication                        |
 | Balance control           | Host the interchangeable control strategies; turn estimated state and setpoints into per-wheel effort                 |
 | Motion actuation          | Configure the motor driver, map effort onto bridge duty and direction, surface driver faults                          |
