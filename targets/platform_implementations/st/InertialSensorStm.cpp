@@ -1,0 +1,133 @@
+#include "targets/platform_implementations/st/InertialSensorStm.hpp"
+#include "infra/util/ReallyAssert.hpp"
+#include <array>
+#include <numbers>
+
+namespace application
+{
+    namespace
+    {
+        constexpr float milliDegreePerSecondToRadianPerSecond = std::numbers::pi_v<float> / 180000.0f;
+        constexpr float milliMeterPerSecondSquaredToMeterPerSecondSquared = 0.001f;
+    }
+
+    drivers::Mpu9250Core::Config InertialSensorStm::DeviceConfig()
+    {
+        drivers::Mpu9250Core::Config config;
+
+        config.gyroscopeFullScale = drivers::Mpu9250Core::GyroscopeFullScale::dps500;
+        config.accelerometerFullScale = drivers::Mpu9250Core::AccelerometerFullScale::g4;
+        config.gyroscopeLowPassFilter = drivers::Mpu9250Core::GyroscopeLowPassFilter::bandwidth41Hz;
+        config.accelerometerLowPassFilter = drivers::Mpu9250Core::AccelerometerLowPassFilter::bandwidth45Hz;
+        config.sampleRateDivider = 0;
+        config.interruptPolarity = drivers::Mpu9250Core::InterruptPolarity::activeHigh;
+        config.interruptDrive = drivers::Mpu9250Core::InterruptDrive::pushPull;
+        config.interruptLatch = drivers::Mpu9250Core::InterruptLatch::pulsed;
+
+        return config;
+    }
+
+    hal::SpiMasterStm::Config InertialSensorStm::BusConfig()
+    {
+        hal::SpiMasterStm::Config config;
+
+        config.baudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+
+        return config;
+    }
+
+    InertialSensorStm::InertialSensorStm() = default;
+
+    platform::InertialAxes InertialSensorStm::ToBodyFrame(float first, float second, float third) const
+    {
+        const std::array<float, 3> sensor{ { first, second, third } };
+
+        return {
+            axisMap.xSign * sensor[axisMap.xFrom],
+            axisMap.ySign * sensor[axisMap.yFrom],
+            axisMap.zSign * sensor[axisMap.zFrom]
+        };
+    }
+
+    void InertialSensorStm::OnAcceleration(drivers::Mpu9250Core::Accelerometer::Samples samples)
+    {
+        really_assert(samples.size() == 3);
+
+        pending.acceleration = ToBodyFrame(
+            static_cast<float>(samples[0].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared,
+            static_cast<float>(samples[1].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared,
+            static_cast<float>(samples[2].Value()) * milliMeterPerSecondSquaredToMeterPerSecondSquared);
+
+        pending.sampledAt = infra::Now();
+        accelerationReceived = true;
+    }
+
+    void InertialSensorStm::OnAngularVelocity(drivers::Mpu9250Core::Gyroscope::Samples samples)
+    {
+        really_assert(samples.size() == 3);
+
+        if (!accelerationReceived)
+            return;
+
+        accelerationReceived = false;
+
+        pending.angularRate = ToBodyFrame(
+            static_cast<float>(samples[0].Value()) * milliDegreePerSecondToRadianPerSecond,
+            static_cast<float>(samples[1].Value()) * milliDegreePerSecondToRadianPerSecond,
+            static_cast<float>(samples[2].Value()) * milliDegreePerSecondToRadianPerSecond);
+
+        pending.valid = true;
+
+        if (onSample)
+            onSample(pending);
+    }
+
+    void InertialSensorStm::Start(const infra::Function<void(const platform::InertialSample&)>& onSample)
+    {
+        this->onSample = onSample;
+        accelerationReceived = false;
+
+        if (identified)
+            StartSampling();
+        else if (!initializing)
+        {
+            initializing = true;
+
+            device.Initialize(DeviceConfig(), [this](drivers::Mpu9250Core::InitializationResult result)
+                {
+                    initializing = false;
+                    identified = result == drivers::Mpu9250Core::InitializationResult::success;
+
+                    if (identified && this->onSample)
+                        StartSampling();
+                });
+        }
+    }
+
+    void InertialSensorStm::StartSampling()
+    {
+        device.AsAccelerometer().Start([this](drivers::Mpu9250Core::Accelerometer::Samples samples)
+            {
+                OnAcceleration(samples);
+            });
+
+        device.AsGyroscope().Start([this](drivers::Mpu9250Core::Gyroscope::Samples samples)
+            {
+                OnAngularVelocity(samples);
+            });
+    }
+
+    bool InertialSensorStm::Identified() const
+    {
+        return identified;
+    }
+
+    void InertialSensorStm::Stop()
+    {
+        device.AsGyroscope().Stop();
+        device.AsAccelerometer().Stop();
+
+        onSample = nullptr;
+        accelerationReceived = false;
+    }
+}
