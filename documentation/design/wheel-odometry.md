@@ -83,12 +83,12 @@ or is not yet written cannot corrupt the accumulated position.
 With the default resolution of 4096 counts per revolution and a 20 millisecond period, the
 ceiling is half a revolution per sample:
 
-| Quantity                     | Value                     |
-|------------------------------|---------------------------|
-| Counts per revolution        | 4096                      |
-| Sample period                | 20 ms                     |
-| Unambiguous counts per sample| 2048                      |
-| Maximum trackable wheel rate | 25 rev/s ≈ 1500 rpm       |
+| Quantity                       | Value                      |
+|--------------------------------|----------------------------|
+| Counts per revolution          | 4096                       |
+| Sample period                  | 20 ms                      |
+| Unambiguous counts per sample  | 2048                       |
+| Maximum trackable wheel rate   | 25 rev/s ≈ 1500 rpm        |
 | Maximum trackable ground speed | ≈ 5.3 m/s at a 34 mm wheel |
 
 The chassis is designed for at most 1.5 m/s, so the margin is better than a factor of three.
@@ -144,35 +144,35 @@ in the accumulation or the velocity path, and there should not be one.
 
 ### Provided
 
-| Interface        | Purpose                                        | Contract                                                                                  |
-|------------------|------------------------------------------------|-------------------------------------------------------------------------------------------|
-| Wheel motion     | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels; zero until the second sample |
-| Chassis motion   | Forward velocity and yaw rate                  | Derived from both wheel velocities and the documented geometry; refreshed on every sample   |
+| Interface      | Purpose                                        | Contract                                                                                           |
+|----------------|------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| Wheel motion   | Signed position and angular velocity per wheel | Lossless across counter wrap; forward motion positive on both wheels; zero until the second sample |
+| Chassis motion | Forward velocity and yaw rate                  | Derived from both wheel velocities and the documented geometry; refreshed on every sample          |
 
 The provided interface is read-only. Consumers observe the latest estimate; they do not drive
 the sampling and cannot advance, reset or reseed the accumulated position.
 
 ### Required
 
-| Interface              | Purpose                                      | Contract                                                                          |
-|------------------------|----------------------------------------------|-----------------------------------------------------------------------------------|
-| Wheel encoders         | Counter value and resolution per wheel       | Counter strictly below the resolution; resolution at least two and constant        |
-| Periodic timebase      | Drive the sampling cadence                   | Fires on the configured period; a sample must not be skipped or the ceiling in Part B is halved |
+| Interface         | Purpose                                | Contract                                                                                        |
+|-------------------|----------------------------------------|-------------------------------------------------------------------------------------------------|
+| Wheel encoders    | Counter value and resolution per wheel | Counter strictly below the resolution; resolution at least two and constant                     |
+| Periodic timebase | Drive the sampling cadence             | Fires on the configured period; a sample must not be skipped or the ceiling in Part B is halved |
 
 ---
 
 ## Data Model
 
-| Entity         | Field           | Type / Unit        | Range             | Notes                                                    |
-|----------------|-----------------|--------------------|-------------------|----------------------------------------------------------|
-| Wheel motion   | position        | encoder counts     | full signed range | Accumulated across hardware wrap; zero at construction    |
-| Wheel motion   | angularVelocity | radians per second | -105 to 105       | Displacement of the last interval over the sample period  |
-| Chassis motion | forwardVelocity | metres per second  | -1.5 to 1.5       | Mean of both wheel velocities times the wheel radius      |
+| Entity         | Field           | Type / Unit        | Range             | Notes                                                         |
+|----------------|-----------------|--------------------|-------------------|---------------------------------------------------------------|
+| Wheel motion   | position        | encoder counts     | full signed range | Accumulated across hardware wrap; zero at construction        |
+| Wheel motion   | angularVelocity | radians per second | -105 to 105       | Displacement of the last interval over the sample period      |
+| Chassis motion | forwardVelocity | metres per second  | -1.5 to 1.5       | Mean of both wheel velocities times the wheel radius          |
 | Chassis motion | yawRate         | radians per second | -3.1 to 3.1       | Wheel difference times radius over track width; positive left |
-| Configuration  | samplePeriod    | microseconds       | greater than zero | Bounds the maximum trackable wheel rate — see Part B      |
-| Configuration  | wheelRadius     | metres             | greater than zero | Fitted value; documented in one place only                |
-| Configuration  | trackWidth      | metres             | greater than zero | Distance between the wheel contact patches                |
-| Configuration  | gearRatio       | encoder per wheel  | greater than zero | Encoder revolutions per wheel revolution; one when direct |
+| Configuration  | samplePeriod    | microseconds       | greater than zero | Bounds the maximum trackable wheel rate — see Part B          |
+| Configuration  | wheelRadius     | metres             | greater than zero | Fitted value; documented in one place only                    |
+| Configuration  | trackWidth      | metres             | greater than zero | Distance between the wheel contact patches                    |
+| Configuration  | gearRatio       | encoder per wheel  | greater than zero | Encoder revolutions per wheel revolution; one when direct     |
 
 ---
 
@@ -264,26 +264,26 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint                  | Value / Description                                                                                              |
-|-----------------------------|------------------------------------------------------------------------------------------------------------------|
-| Maximum trackable wheel rate| Half the resolution per sample — 25 rev/s at 4096 counts and 20 ms. Beyond it the position is wrong by a revolution, silently |
-| Missed sample               | A skipped period halves the ceiling for that interval, and reports the two periods' motion as one period's velocity |
-| Velocity quantisation       | One count per period: 0.077 rad/s at the wheel, about 2.6 mm/s of ground speed                                     |
-| Velocity is unfiltered      | A single-interval difference; consumers needing smoothness filter at their own bandwidth                           |
-| Geometry is nominal         | Wheel radius, track width and gear ratio are configured values, not measured ones; nothing here detects a wrong one |
-| Slip is invisible           | A wheel that spins without the chassis moving reports motion that did not happen. Odometry is dead reckoning       |
-| Accumulator range           | Signed 32-bit counts — about 524 288 revolutions at the default resolution, far beyond any run length              |
-| No heap, no recursion       | Fixed-size state, two wheels, no dynamic allocation on any path                                                    |
+| Constraint                   | Value / Description                                                                                                           |
+|------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Maximum trackable wheel rate | Half the resolution per sample — 25 rev/s at 4096 counts and 20 ms. Beyond it the position is wrong by a revolution, silently |
+| Missed sample                | A skipped period halves the ceiling for that interval, and reports the two periods' motion as one period's velocity           |
+| Velocity quantisation        | One count per period: 0.077 rad/s at the wheel, about 2.6 mm/s of ground speed                                                |
+| Velocity is unfiltered       | A single-interval difference; consumers needing smoothness filter at their own bandwidth                                      |
+| Geometry is nominal          | Wheel radius, track width and gear ratio are configured values, not measured ones; nothing here detects a wrong one           |
+| Slip is invisible            | A wheel that spins without the chassis moving reports motion that did not happen. Odometry is dead reckoning                  |
+| Accumulator range            | Signed 32-bit counts — about 524 288 revolutions at the default resolution, far beyond any run length                         |
+| No heap, no recursion        | Fixed-size state, two wheels, no dynamic allocation on any path                                                               |
 
 ---
 
 ## Open Questions
 
-| # | Question                                                                              | Options                                                                                                                         | Status                          |
-|---|---------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| 1 | How is the once-per-revolution index event exposed (REQ-ODOM-005)?                     | Extend the portable encoder interface with an index accessor; add an interrupt-driven index latch in the hardware layer; drop the requirement | open — see the note below       |
-| 2 | Are the wheel radius, track width and gear ratio defaults the built robot's values?    | Measure on the assembled chassis; fit from a straight-line and a spin-in-place run                                               | open — defaults are placeholders |
-| 3 | Should velocity be filtered before the outer loop sees it?                              | Leave raw and let balance control filter; add a configurable first-order filter here                                             | open — raw for now, decided by the balance loop's noise budget |
+| # | Question                                                                            | Options                                                                                                                                       | Status                                                         |
+|---|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| 1 | How is the once-per-revolution index event exposed (REQ-ODOM-005)?                  | Extend the portable encoder interface with an index accessor; add an interrupt-driven index latch in the hardware layer; drop the requirement | open — see the note below                                      |
+| 2 | Are the wheel radius, track width and gear ratio defaults the built robot's values? | Measure on the assembled chassis; fit from a straight-line and a spin-in-place run                                                            | open — defaults are placeholders                               |
+| 3 | Should velocity be filtered before the outer loop sees it?                          | Leave raw and let balance control filter; add a configurable first-order filter here                                                          | open — raw for now, decided by the balance loop's noise budget |
 
 **On question 1.** The requirement cannot be met through the interface this component consumes:
 the portable encoder abstraction exposes counter, resolution, direction and speed, and has no
