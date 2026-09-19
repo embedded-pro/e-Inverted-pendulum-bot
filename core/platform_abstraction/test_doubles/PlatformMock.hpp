@@ -10,20 +10,14 @@ namespace platform
         : public Platform
     {
     public:
-        // Test-only type, so the vtable entry costs nothing on target. It cannot be `final`
-        // because testing::StrictMock<> derives from it, and it cannot take the protected
-        // non-virtual destructor the interfaces use because tests instantiate it directly.
+        // Not final, and with a public virtual destructor: StrictMock<> derives from it
+        // and tests instantiate it directly.
         virtual ~PlatformMock() = default;
 
         MOCK_METHOD(hal::GpioPin&, StatusLed, (), (override));
         MOCK_METHOD(hal::SerialCommunication&, Communication, (), (override));
         MOCK_METHOD(services::Tracer&, Tracer, (), (override));
-        MOCK_METHOD(MotorBridge&, LeftMotorBridge, (), (override));
-        MOCK_METHOD(MotorBridge&, RightMotorBridge, (), (override));
-        MOCK_METHOD(hal::SpiMaster&, MotorDriverConfiguration, (), (override));
-        MOCK_METHOD(hal::GpioPin&, MotorDriverFault, (), (override));
-        MOCK_METHOD(hal::GpioPin&, MotorDriverStall, (), (override));
-        MOCK_METHOD((hal::AnalogToDigitalPin<infra::MilliVolt, uint32_t>&), MotorDriverBackEmf, (), (override));
+        MOCK_METHOD(MotorDriver&, Motors, (), (override));
         MOCK_METHOD(void, Run, (), (override));
     };
 }

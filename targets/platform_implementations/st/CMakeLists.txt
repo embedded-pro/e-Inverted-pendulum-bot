@@ -1,5 +1,3 @@
-# STM32 platform implementation (NUCLEO-WB55RG). Selected by the ST embedded
-# presets in CMakePresets.json.
 add_library(inverted_pendulum_bot.platform_st ${EMIL_EXCLUDE_FROM_ALL})
 
 target_include_directories(inverted_pendulum_bot.platform_st PUBLIC
@@ -31,6 +29,10 @@ target_compile_definitions(inverted_pendulum_bot.platform_st PUBLIC
 )
 
 target_sources(inverted_pendulum_bot.platform_st PRIVATE
+    MotorBridgeStm.hpp
+    MotorBridgeStm.cpp
+    MotorDriverStm.hpp
+    MotorDriverStm.cpp
     PlatformImpl.hpp
     PlatformImpl.cpp
 )

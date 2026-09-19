@@ -1,4 +1,5 @@
-#include "core/blinky_cli/BlinkyCli.hpp"
+#include "core/cli/Cli.hpp"
+#include "infra/util/Tokenizer.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -8,13 +9,14 @@ namespace application
 {
     namespace
     {
-        // strtof needs a terminated buffer, and BoundedConstString is not one.
-        // It also reports failure as 0.0, which for a motor command is a valid
-        // value, so the parse is only accepted when the whole token was consumed.
+        // strtof needs a terminated buffer, and BoundedConstString is not one. It
+        // also reports failure as 0.0, which for a motor command is a valid value,
+        // so the parse is only accepted when the whole token was consumed. The
+        // tokenizer never yields an empty token, so only the length is guarded.
         std::optional<float> ParseEffort(const infra::BoundedConstString& token)
         {
             std::array<char, 16> buffer{};
-            if (token.empty() || token.size() >= buffer.size())
+            if (token.size() >= buffer.size())
                 return std::nullopt;
 
             std::copy_n(token.begin(), token.size(), buffer.begin());
@@ -29,7 +31,7 @@ namespace application
         }
     }
 
-    BlinkyCli::BlinkyCli(platform::Platform& platform, motion::MotionActuation& motionActuation)
+    Cli::Cli(platform::Platform& platform, motion::MotionActuation& motionActuation)
         : debugLed{ platform.StatusLed() }
         , terminal{ platform.Communication(), platform.Tracer() }
         , commands{ terminal, platform.Tracer(), motionActuation }
@@ -37,7 +39,7 @@ namespace application
         platform.Tracer().Trace() << "inverted-pendulum-bot ready - try 'ping', 'id' or 'drive <left> <right>'";
     }
 
-    BlinkyCli::CliCommands::CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer, motion::MotionActuation& motionActuation)
+    Cli::CliCommands::CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer, motion::MotionActuation& motionActuation)
         : services::TerminalCommands(terminal)
         , tracer(tracer)
         , motionActuation(motionActuation)
@@ -60,7 +62,7 @@ namespace application
               { { "coast", "c", "release both bridges" },
                   [this](const infra::BoundedConstString& params)
                   {
-                      Coast(params);
+                      ReleaseBridges(params);
                   } },
               { { "brake", "b", "short both motors" },
                   [this](const infra::BoundedConstString& params)
@@ -70,22 +72,22 @@ namespace application
           } }
     {}
 
-    infra::MemoryRange<const services::TerminalCommands::Command> BlinkyCli::CliCommands::Commands()
+    infra::MemoryRange<const services::TerminalCommands::Command> Cli::CliCommands::Commands()
     {
         return infra::MakeRange(commands);
     }
 
-    void BlinkyCli::CliCommands::Ping(const infra::BoundedConstString&)
+    void Cli::CliCommands::Ping(const infra::BoundedConstString&)
     {
         tracer.Trace() << "pong";
     }
 
-    void BlinkyCli::CliCommands::Identify(const infra::BoundedConstString&)
+    void Cli::CliCommands::Identify(const infra::BoundedConstString&)
     {
-        tracer.Trace() << "inverted-pendulum-bot blinky-cli";
+        tracer.Trace() << "inverted-pendulum-bot cli";
     }
 
-    void BlinkyCli::CliCommands::Drive(const infra::BoundedConstString& params)
+    void Cli::CliCommands::Drive(const infra::BoundedConstString& params)
     {
         if (motionActuation.Fault() != motion::FaultCause::none)
         {
@@ -93,17 +95,17 @@ namespace application
             return;
         }
 
-        // "<left> <right>", each a signed decimal fraction. Both are parsed before
-        // anything is applied, so a malformed command moves neither wheel.
-        const auto separator = params.find(' ');
-        if (separator == infra::BoundedConstString::npos)
-        {
-            tracer.Trace() << "usage: drive <left> <right>";
-            return;
-        }
+        // Both are parsed before anything is applied, so a malformed command moves
+        // neither wheel.
+        const infra::Tokenizer tokenizer{ params, ' ' };
+        std::optional<float> effortLeft;
+        std::optional<float> effortRight;
 
-        const auto effortLeft = ParseEffort(params.substr(0, separator));
-        const auto effortRight = ParseEffort(params.substr(separator + 1));
+        if (tokenizer.Size() == 2)
+        {
+            effortLeft = ParseEffort(tokenizer.Token(0));
+            effortRight = ParseEffort(tokenizer.Token(1));
+        }
 
         if (!effortLeft.has_value() || !effortRight.has_value())
         {
@@ -115,13 +117,13 @@ namespace application
         tracer.Trace() << "driving";
     }
 
-    void BlinkyCli::CliCommands::Coast(const infra::BoundedConstString&)
+    void Cli::CliCommands::ReleaseBridges(const infra::BoundedConstString&)
     {
         motionActuation.Disable(motion::DisableState::coast);
         tracer.Trace() << "coasting";
     }
 
-    void BlinkyCli::CliCommands::Brake(const infra::BoundedConstString&)
+    void Cli::CliCommands::Brake(const infra::BoundedConstString&)
     {
         motionActuation.Disable(motion::DisableState::brake);
         tracer.Trace() << "braking";

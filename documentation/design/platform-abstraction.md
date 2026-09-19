@@ -102,8 +102,8 @@ them.
 |---------------------------|------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 | Inertial measurement role | Body-frame angular rate and acceleration                         | Fixed axis convention; failure and staleness reported explicitly, never substituted |
 | Wheel encoder role        | Signed counts and index events for both wheels                   | Lossless across counter wrap; forward motion positive on both wheels                |
-| Motor bridge role         | Signed effort per motor, plus coast and brake                    | Coast reachable without a healthy control loop                                      |
-| Driver configuration role | Write and read back driver configuration, observe the fault line | Read-back is supported; the fault line is observable without polling configuration  |
+| Motor driver role         | The two motor bridges, plus notification when the driver faults  | Coast reachable without a healthy control loop; a fault is reported, never polled   |
+| Motor bridge role         | Two duty cycles, one per driver input                            | Both inputs low releases the bridge; the encoding is the driver's, not the board's  |
 | Bluetooth peripheral role | Advertising, connection, pairing, GATT database                  | Connection loss observable to the application                                       |
 | Parameter store role      | Persist and retrieve tuning parameters                           | Absence or failure is reported so the application can fall back to defaults         |
 | Timebase role             | Periodic scheduling and interval measurement                     | Monotonic; reports the measured interval                                            |

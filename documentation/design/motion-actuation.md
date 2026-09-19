@@ -53,8 +53,14 @@ commanded brushed DC motors, per-motor current regulation, and a single fault ou
 configured over one serial channel.
 
 The consequence for this design is that bridge state is commanded by the firmware on every
-control iteration rather than delegated to the part. Phasing and dead-time behaviour become
-this component's concern.
+control iteration rather than delegated to the part. Each bridge takes **two logic-level
+inputs**, so one driver needs four PWM lines in total — not four per motor. The part
+generates its own gate drive and its own dead time, so the timer supplies plain
+logic-level PWM: no complementary outputs, and no dead-time generator on the
+microcontroller side.
+
+Because all four inputs belong to one driver, they are four channels of a single timer.
+They therefore share an update event, so both motors' duty cycles change together.
 
 ### Part B — Configuration and verification
 
@@ -78,6 +84,16 @@ losses dominate.
 
 Coasting opens both bridge legs, leaving the motor terminals floating; the robot's wheels
 turn freely. Braking shorts the terminals, dissipating kinetic energy and resisting motion.
+
+Both states are reached through the same two inputs, and the encoding is easy to get
+backwards — driving both inputs low is a *coast*, not a brake:
+
+| Input 1 | Input 2 | Bridge          | Meaning |
+|---------|---------|-----------------|---------|
+| low     | low     | released        | Coast   |
+| PWM     | low     | driven forward  | Forward |
+| low     | PWM     | driven reverse  | Reverse |
+| high    | high    | both legs low   | Brake   |
 
 Safety-initiated disables always coast. A falling robot that brakes plants its wheels and
 converts a topple into a harder impact, and braking still drives current through the

@@ -6,7 +6,7 @@ real-time and memory constraints. The repository was bootstrapped from
 and carries its structure, build system, dev container, CI, and documentation
 scaffolding, so the project starts from a working, testable baseline.
 
-> **Status**: the structure is in place; the `example_*` components and `blinky_cli`
+> **Status**: the structure is in place; the `example_*` components and `cli`
 > are the scaffold's worked examples and are expected to be replaced by the robot's
 > own components (sensing, control, actuation).
 
@@ -19,7 +19,7 @@ logic in `core/` depends only on that interface; each board provides a concrete
 therefore compiled once and runs on the host (for testing) and on the
 microcontroller.
 
-The current headline example is **`blinky_cli`**: blink a status LED and serve a tiny
+The current headline example is **`cli`**: blink a status LED and serve a tiny
 UART command-line interface (`ping`, `id`). It is written once against the interface
 and builds for the host and the **ST NUCLEO-WB55RG**.
 
@@ -28,7 +28,7 @@ and builds for the host and the **ST NUCLEO-WB55RG**.
 - **Platform abstraction**: application logic depends on the `platform::Platform`
   interface, not on an MCU — so it is built once and unit-tested on the host against
   a `PlatformMock`, then run on real hardware.
-- **Real firmware output**: `blinky_cli` builds to a flashable `.elf`/`.hex` for the
+- **Real firmware output**: `cli` builds to a flashable `.elf`/`.hex` for the
   NUCLEO-WB55RG (LED blink + UART CLI).
 - **No heap allocation** in runtime/embedded code — bounded containers from
   `infra/embedded-infra-lib` (`infra::BoundedVector`, `infra::BoundedString`).
@@ -71,7 +71,7 @@ and builds for the host and the **ST NUCLEO-WB55RG**.
    ./build/host/bin/Debug/inverted_pendulum_bot.example_app          # -> accumulator total = 5
    ```
 
-5. Build the `blinky_cli` firmware for the board (produces `.elf`/`.hex`):
+5. Build the `cli` firmware for the board (produces `.elf`/`.hex`):
    ```bash
    cmake --preset NUCLEO-WB55RG          # ST Nucleo-68
    cmake --build --preset NUCLEO-WB55RG-Debug
@@ -90,10 +90,10 @@ All presets are defined in `CMakePresets.json` (`host`, `host-single-Debug`,
 e-Inverted-pendulum-bot/
 ├── core/                      # Reusable libraries only — no entry points
 │   ├── platform_abstraction/  #   platform::Platform interface (+ mock) — the seam
-│   ├── blinky_cli/            #   portable app: LED blink + UART CLI (+ unit test)
+│   ├── cli/            #   portable app: LED blink + UART CLI (+ unit test)
 │   └── example_component/     #   trivial interfaces/ + implementations/ (+ unit test)
 ├── targets/                   # Application entry points + platform implementations
-│   ├── blinky_cli/            #   one Main.cpp reused across host/st
+│   ├── cli/            #   one Main.cpp reused across host/st
 │   ├── example_app/           #   a trivial host-only entry point
 │   └── platform_implementations/
 │       ├── host/              #   PlatformImpl: stubs + loopback serial (host build)

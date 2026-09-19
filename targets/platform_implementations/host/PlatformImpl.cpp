@@ -17,34 +17,9 @@ namespace application
         return tracer;
     }
 
-    platform::MotorBridge& PlatformImpl::LeftMotorBridge()
+    platform::MotorDriver& PlatformImpl::Motors()
     {
-        return leftMotorBridge;
-    }
-
-    platform::MotorBridge& PlatformImpl::RightMotorBridge()
-    {
-        return rightMotorBridge;
-    }
-
-    hal::SpiMaster& PlatformImpl::MotorDriverConfiguration()
-    {
-        return motorDriverSpi;
-    }
-
-    hal::GpioPin& PlatformImpl::MotorDriverFault()
-    {
-        return motorDriverFault;
-    }
-
-    hal::GpioPin& PlatformImpl::MotorDriverStall()
-    {
-        return motorDriverStall;
-    }
-
-    hal::AnalogToDigitalPin<infra::MilliVolt, uint32_t>& PlatformImpl::MotorDriverBackEmf()
-    {
-        return motorDriverBackEmf;
+        return motors;
     }
 
     void PlatformImpl::Run()

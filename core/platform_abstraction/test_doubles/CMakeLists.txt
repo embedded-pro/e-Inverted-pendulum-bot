@@ -11,5 +11,6 @@ target_link_libraries(inverted_pendulum_bot.platform_abstraction_mock INTERFACE
 
 target_sources(inverted_pendulum_bot.platform_abstraction_mock INTERFACE
     MotorBridgeMock.hpp
+    MotorDriverMock.hpp
     PlatformMock.hpp
 )

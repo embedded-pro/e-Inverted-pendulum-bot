@@ -1,4 +1,4 @@
-#include "core/blinky_cli/BlinkyCli.hpp"
+#include "core/cli/Cli.hpp"
 #include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/test_doubles/PlatformMock.hpp"
 #include "hal/interfaces/test_doubles/SerialCommunicationMock.hpp"
@@ -55,12 +55,12 @@ namespace
         MOCK_METHOD(void, ClearFault, (), (override));
     };
 
-    class BlinkyCliTest
+    class CliTest
         : public testing::Test
         , public infra::ClockFixture
     {
     public:
-        BlinkyCliTest()
+        CliTest()
         {
             EXPECT_CALL(platform, StatusLed()).WillRepeatedly(testing::ReturnRef(led));
             EXPECT_CALL(platform, Communication()).WillRepeatedly(testing::ReturnRef(communication));
@@ -101,36 +101,36 @@ namespace
     };
 }
 
-TEST_F(BlinkyCliTest, greets_and_shows_a_prompt_on_construction)
+TEST_F(CliTest, greets_and_shows_a_prompt_on_construction)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_THAT(Output(), testing::HasSubstr("ready"));
     EXPECT_THAT(Output(), testing::HasSubstr("drive"));
     EXPECT_THAT(Output(), testing::HasSubstr("> "));
 }
 
-TEST_F(BlinkyCliTest, ping_replies_pong)
+TEST_F(CliTest, ping_replies_pong)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     Send("ping");
 
     EXPECT_THAT(Output(), testing::HasSubstr("pong"));
 }
 
-TEST_F(BlinkyCliTest, id_prints_the_board_identifier)
+TEST_F(CliTest, id_prints_the_board_identifier)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     Send("id");
 
-    EXPECT_THAT(Output(), testing::HasSubstr("inverted-pendulum-bot blinky-cli"));
+    EXPECT_THAT(Output(), testing::HasSubstr("inverted-pendulum-bot cli"));
 }
 
-TEST_F(BlinkyCliTest, drive_applies_both_efforts)
+TEST_F(CliTest, drive_applies_both_efforts)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
     EXPECT_CALL(motionActuation, Apply(testing::FloatEq(0.3f), testing::FloatEq(-0.7f)));
@@ -140,9 +140,9 @@ TEST_F(BlinkyCliTest, drive_applies_both_efforts)
     EXPECT_THAT(Output(), testing::HasSubstr("driving"));
 }
 
-TEST_F(BlinkyCliTest, drive_without_a_second_argument_prints_usage)
+TEST_F(CliTest, drive_without_a_second_argument_prints_usage)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -151,9 +151,9 @@ TEST_F(BlinkyCliTest, drive_without_a_second_argument_prints_usage)
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
 }
 
-TEST_F(BlinkyCliTest, drive_is_refused_while_a_fault_is_latched)
+TEST_F(CliTest, drive_is_refused_while_a_fault_is_latched)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::driverFault));
 
@@ -162,9 +162,9 @@ TEST_F(BlinkyCliTest, drive_is_refused_while_a_fault_is_latched)
     EXPECT_THAT(Output(), testing::HasSubstr("refused"));
 }
 
-TEST_F(BlinkyCliTest, coast_releases_the_bridges)
+TEST_F(CliTest, coast_releases_the_bridges)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Disable(motion::DisableState::coast));
 
@@ -173,9 +173,9 @@ TEST_F(BlinkyCliTest, coast_releases_the_bridges)
     EXPECT_THAT(Output(), testing::HasSubstr("coasting"));
 }
 
-TEST_F(BlinkyCliTest, brake_shorts_the_motors)
+TEST_F(CliTest, brake_shorts_the_motors)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Disable(motion::DisableState::brake));
 
@@ -189,9 +189,9 @@ TEST_F(BlinkyCliTest, brake_shorts_the_motors)
 // stop rather than as a command to reject. The strict mock fails the test on its
 // own if Apply is reached.
 
-TEST_F(BlinkyCliTest, drive_with_a_missing_right_argument_is_rejected)
+TEST_F(CliTest, drive_with_a_missing_right_argument_is_rejected)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -200,9 +200,9 @@ TEST_F(BlinkyCliTest, drive_with_a_missing_right_argument_is_rejected)
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
 }
 
-TEST_F(BlinkyCliTest, drive_with_a_non_numeric_argument_is_rejected)
+TEST_F(CliTest, drive_with_a_non_numeric_argument_is_rejected)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -211,9 +211,9 @@ TEST_F(BlinkyCliTest, drive_with_a_non_numeric_argument_is_rejected)
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
 }
 
-TEST_F(BlinkyCliTest, drive_with_a_trailing_third_argument_is_rejected)
+TEST_F(CliTest, drive_with_a_trailing_third_argument_is_rejected)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
@@ -222,13 +222,24 @@ TEST_F(BlinkyCliTest, drive_with_a_trailing_third_argument_is_rejected)
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
 }
 
-TEST_F(BlinkyCliTest, drive_with_a_partially_numeric_argument_is_rejected)
+TEST_F(CliTest, drive_with_a_partially_numeric_argument_is_rejected)
 {
-    application::BlinkyCli blinkyCli{ platform, motionActuation };
+    application::Cli cli{ platform, motionActuation };
 
     EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
 
     Send("drive 0.3 0.7x");
+
+    EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
+}
+
+TEST_F(CliTest, drive_with_an_over_long_argument_is_rejected)
+{
+    application::Cli cli{ platform, motionActuation };
+
+    EXPECT_CALL(motionActuation, Fault()).WillOnce(testing::Return(motion::FaultCause::none));
+
+    Send("drive 0.3 0.70000000000000");
 
     EXPECT_THAT(Output(), testing::HasSubstr("usage: drive"));
 }

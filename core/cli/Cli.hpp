@@ -1,5 +1,5 @@
-#ifndef CORE_BLINKY_CLI_BLINKY_CLI_HPP
-#define CORE_BLINKY_CLI_BLINKY_CLI_HPP
+#ifndef CORE_CLI_CLI_HPP
+#define CORE_CLI_CLI_HPP
 
 #include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/Platform.hpp"
@@ -9,17 +9,10 @@
 
 namespace application
 {
-    // Portable application logic: blinks the status LED and serves a small
-    // command-line interface over the platform's serial channel.
-    //
-    // It depends ONLY on platform::Platform, so it is compiled once and runs on
-    // every target (TI, ST) and on the host, where it is unit-tested against a
-    // PlatformMock. The board-specific wiring lives in
-    // targets/platform_implementations/<platform>.
-    class BlinkyCli
+    class Cli
     {
     public:
-        BlinkyCli(platform::Platform& platform, motion::MotionActuation& motionActuation);
+        Cli(platform::Platform& platform, motion::MotionActuation& motionActuation);
 
     private:
         class CliCommands final
@@ -34,7 +27,7 @@ namespace application
             void Ping(const infra::BoundedConstString& params);
             void Identify(const infra::BoundedConstString& params);
             void Drive(const infra::BoundedConstString& params);
-            void Coast(const infra::BoundedConstString& params);
+            void ReleaseBridges(const infra::BoundedConstString& params);
             void Brake(const infra::BoundedConstString& params);
 
             services::Tracer& tracer;

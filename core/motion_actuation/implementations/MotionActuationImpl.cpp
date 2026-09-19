@@ -6,6 +6,19 @@ namespace motion
 {
     namespace
     {
+        // infra::Quantity is not a literal type, so these are functions rather
+        // than constexpr objects; a namespace-scope object would need dynamic
+        // initialization on target.
+        hal::Percent Off()
+        {
+            return hal::Percent{ 0 };
+        }
+
+        hal::Percent Full()
+        {
+            return hal::Percent{ 100 };
+        }
+
         hal::Percent DutyOf(float magnitude)
         {
             return hal::Percent{ static_cast<uint8_t>(std::lround(std::clamp(magnitude, 0.0f, 1.0f) * 100.0f)) };
@@ -14,28 +27,25 @@ namespace motion
 
     MotionActuationImpl::Config::Config() = default;
 
-    MotionActuationImpl::MotionActuationImpl(platform::MotorBridge& left, platform::MotorBridge& right, hal::GpioPin& faultPin, const Config& config)
-        : left(left)
-        , right(right)
-        , faultPin(faultPin)
+    MotionActuationImpl::MotionActuationImpl(platform::MotorDriver& motors, const Config& config)
+        : motors(motors)
         , config(config)
     {
-        left.SetBaseFrequency(config.switchingFrequency);
-        right.SetBaseFrequency(config.switchingFrequency);
+        motors.Left().SetBaseFrequency(config.switchingFrequency);
+        motors.Right().SetBaseFrequency(config.switchingFrequency);
 
-        Coast();
+        ReleaseBridges();
 
-        faultPin.EnableInterrupt([this]()
+        motors.EnableFaultNotification([this]()
             {
                 OnFault();
-            },
-            config.faultActiveHigh ? hal::InterruptTrigger::risingEdge : hal::InterruptTrigger::fallingEdge);
+            });
     }
 
     MotionActuationImpl::~MotionActuationImpl()
     {
-        faultPin.DisableInterrupt();
-        Coast();
+        motors.DisableFaultNotification();
+        ReleaseBridges();
     }
 
     void MotionActuationImpl::Apply(float effortLeft, float effortRight)
@@ -43,40 +53,42 @@ namespace motion
         if (fault != FaultCause::none)
             return;
 
-        ApplyTo(left, effortLeft);
-        ApplyTo(right, effortRight);
+        ApplyTo(motors.Left(), effortLeft);
+        ApplyTo(motors.Right(), effortRight);
     }
 
-    // Magnitude selects duty, sign selects which half-bridge carries it. Monotonic,
-    // so a change in commanded effort always moves the wheel the same way.
+    // Magnitude selects duty, sign selects which input carries it. Monotonic, so a
+    // change in commanded effort always moves the wheel the same way.
     void MotionActuationImpl::ApplyTo(platform::MotorBridge& bridge, float effort) const
     {
         const auto clamped = std::clamp(effort, -1.0f, 1.0f);
         const auto duty = DutyOf(std::fabs(clamped));
 
         if (clamped >= 0.0f)
-            bridge.Start(duty, hal::Percent{ 0 });
+            bridge.Start(duty, Off());
         else
-            bridge.Start(hal::Percent{ 0 }, duty);
+            bridge.Start(Off(), duty);
     }
 
     void MotionActuationImpl::Disable(DisableState state)
     {
         if (state == DisableState::brake)
         {
-            left.Start(hal::Percent{ 0 }, hal::Percent{ 0 });
-            right.Start(hal::Percent{ 0 }, hal::Percent{ 0 });
+            // Both inputs high turns both low-side transistors on, shorting the
+            // motor. Both inputs low would release the bridge, which is a coast.
+            motors.Left().Start(Full(), Full());
+            motors.Right().Start(Full(), Full());
         }
         else
         {
-            Coast();
+            ReleaseBridges();
         }
     }
 
-    void MotionActuationImpl::Coast() const
+    void MotionActuationImpl::ReleaseBridges() const
     {
-        left.Stop();
-        right.Stop();
+        motors.Left().Stop();
+        motors.Right().Stop();
     }
 
     FaultCause MotionActuationImpl::Fault() const
@@ -92,6 +104,6 @@ namespace motion
     void MotionActuationImpl::OnFault()
     {
         fault = FaultCause::driverFault;
-        Coast();
+        ReleaseBridges();
     }
 }
