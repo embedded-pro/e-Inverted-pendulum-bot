@@ -51,6 +51,14 @@ namespace sensing
             return;
         }
 
+        if (GapSince(biasSamples == 0 ? calibrationStarted : lastCalibrationSample, sample.sampledAt))
+        {
+            calibration = CalibrationState::failed;
+            return;
+        }
+
+        lastCalibrationSample = sample.sampledAt;
+
         biasSum.x += sample.angularRate.x;
         biasSum.y += sample.angularRate.y;
         biasSum.z += sample.angularRate.z;
@@ -80,7 +88,12 @@ namespace sensing
 
     bool InertialSensingImpl::Stale() const
     {
-        return infra::Now() - lastSample.sampledAt > config.stalePeriods * config.samplePeriod;
+        return GapSince(lastSample.sampledAt, infra::Now());
+    }
+
+    bool InertialSensingImpl::GapSince(infra::TimePoint previous, infra::TimePoint now) const
+    {
+        return now - previous > config.stalePeriods * config.samplePeriod;
     }
 
     Measurement InertialSensingImpl::Latest() const
@@ -125,6 +138,7 @@ namespace sensing
         biasSum = platform::InertialAxes{};
         biasSamples = 0;
         calibrationStarted = infra::Now();
+        lastCalibrationSample = calibrationStarted;
     }
 
     CalibrationState InertialSensingImpl::Calibration() const

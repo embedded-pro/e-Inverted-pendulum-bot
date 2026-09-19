@@ -31,7 +31,7 @@ namespace application
         }
 
     private:
-        void Emit()
+        void Emit() const
         {
             platform::InertialSample sample;
 

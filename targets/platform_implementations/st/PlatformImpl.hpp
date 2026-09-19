@@ -49,7 +49,7 @@ namespace application
 
         MotorDriverStm motors;
         WheelEncodersStm encoders;
-        InertialSensorStm inertial;
+        InertialSensorStm inertial{ platform::AxisMap{} };
 
         services::StreamWriterOnSerialCommunication::WithStorage<256> streamWriter{ console };
         infra::TextOutputStream::WithErrorPolicy stream{ streamWriter };

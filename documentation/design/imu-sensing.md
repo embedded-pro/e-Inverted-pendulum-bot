@@ -30,7 +30,8 @@ date: 2026-09-19
   from every subsequent sample.
 - Refusing to calibrate when the robot is not still, and reporting that refusal.
 - Marking its output invalid when no sample has arrived for more than three sampling periods.
-- Marking its output invalid when a sensor transfer fails, rather than publishing a value.
+- Marking its output invalid when a sample is flagged as a failed transfer, rather than
+  publishing a value. On the ST board nothing raises that flag today — see **Constraints**.
 - Publishing a validity indication, and the reason for invalidity, with every measurement.
 
 **Is NOT responsible for:**
@@ -61,7 +62,14 @@ around it: the bus and pins, the frame and units, calibration, and validity.
 ### Part B — Sampling is driven by the sensor, not by a loop
 
 The part asserts a data-ready line when a new sample is latched. That line is wired to an
-interrupt, the sample is read in response, and it is timestamped at that moment.
+interrupt and the sample is read in response.
+
+The sample is timestamped when the driver delivers it, which is one burst later than the edge
+that latched it — about 120 µs at the bus clock below, plus event-dispatch latency. That is a
+near-constant offset rather than jitter, and it is stated here because the design would
+otherwise claim the timestamp is the capture instant when it is the delivery instant. Closing
+the gap means timestamping inside the driver's interrupt handler, which is a change to the
+vendored driver rather than to this component.
 
 The alternative — polling on a periodic timer — was rejected. Both the estimator's required
 interface and the platform timebase contract say the *measured* interval is what consumers get,
@@ -116,10 +124,14 @@ corrected to match. The reasoning beyond precedence: the architecture already de
 component as producing *calibrated* measurements, and an estimator that receives a corrected rate
 is a pure fusion filter rather than one carrying a calibration mode of its own.
 
-Calibration averages the angular rate over a window while checking that every sample stays within
-a stillness threshold. A sample beyond the threshold abandons the attempt and reports failure,
-because an average taken while the robot moves is not a bias — it is motion, and subtracting it
-would bias the estimate permanently. A failed attempt leaves the previous bias untouched.
+Calibration averages the angular rate over a window while checking two things. Every sample must
+stay within a stillness threshold: a sample beyond it abandons the attempt, because an average
+taken while the robot moves is not a bias — it is motion, and subtracting it would bias the
+estimate permanently. And no gap between consecutive samples may exceed the bound that decides
+staleness. That second check matters because the window closes on elapsed time rather than on a
+count of samples; without it, one sample, a stall, and a second sample a second later would be
+accepted as a bias drawn from two readings, when the whole point of a window is that averaging
+several hundred shrinks the noise. A failed attempt leaves the previous bias untouched.
 
 ### Part F — Validity has a cause
 
@@ -155,18 +167,18 @@ would stay true forever at exactly the moment it stopped being true.
 
 ## Data Model
 
-| Entity        | Field              | Type / Unit               | Range                                                   | Notes                                            |
-|---------------|--------------------|---------------------------|---------------------------------------------------------|--------------------------------------------------|
-| Measurement   | angularRate        | radians per second        | -8.7 to 8.7                                             | Body frame, bias-corrected                       |
-| Measurement   | acceleration       | metres per second squared | -39 to 39                                               | Body frame, uncorrected                          |
-| Measurement   | sampledAt          | time point                | monotonic                                               | Captured at the data-ready interrupt             |
-| Measurement   | valid              | boolean                   | true or false                                           | False means unusable, not degraded               |
-| Measurement   | cause              | enumeration               | none, neverSampled, stale, transferFailed, uncalibrated | Why an invalid measurement is invalid            |
-| Calibration   | gyroBias           | radians per second        | -0.17 to 0.17                                           | One per axis, re-estimated each power-on         |
-| Calibration   | window             | milliseconds              | 500 to 2000                                             | Averaging window                                 |
-| Calibration   | stillnessThreshold | radians per second        | fitted value                                            | Exceeding it during the window fails the attempt |
-| Configuration | samplePeriod       | microseconds              | greater than zero                                       | Expected cadence; only staleness is judged by it |
-| Configuration | stalePeriods       | count                     | greater than zero                                       | Periods without a sample before invalidity       |
+| Entity        | Field              | Type / Unit               | Range                                                   | Notes                                                                          |
+|---------------|--------------------|---------------------------|---------------------------------------------------------|--------------------------------------------------------------------------------|
+| Measurement   | angularRate        | radians per second        | -8.7 to 8.7                                             | Body frame, bias-corrected                                                     |
+| Measurement   | acceleration       | metres per second squared | -39 to 39                                               | Body frame, uncorrected                                                        |
+| Measurement   | sampledAt          | time point                | monotonic                                               | Taken when the driver delivers the sample, one burst after the data-ready edge |
+| Measurement   | valid              | boolean                   | true or false                                           | False means unusable, not degraded                                             |
+| Measurement   | cause              | enumeration               | none, neverSampled, stale, transferFailed, uncalibrated | Why an invalid measurement is invalid                                          |
+| Calibration   | gyroBias           | radians per second        | -0.17 to 0.17                                           | One per axis, re-estimated each power-on                                       |
+| Calibration   | window             | milliseconds              | 500 to 2000                                             | Averaging window                                                               |
+| Calibration   | stillnessThreshold | radians per second        | fitted value                                            | Exceeding it during the window fails the attempt                               |
+| Configuration | samplePeriod       | microseconds              | greater than zero                                       | Expected cadence; only staleness is judged by it                               |
+| Configuration | stalePeriods       | count                     | greater than zero                                       | Periods without a sample before invalidity                                     |
 
 ---
 
@@ -253,24 +265,28 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint                  | Value / Description                                                                                                                                                                                                  |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Sample rate                 | 1 kHz, set by the part's own divider. The requirement asks for at least 500 Hz; a nominal 500 would sit below it whenever the internal oscillator runs slow, so the rate is doubled rather than left on the boundary |
-| Bus clock                   | 1 MHz. The part permits 20 MHz only for sensor and interrupt registers and 1 MHz elsewhere, and the adapter does not switch clocks per transaction, so the whole bus runs at the lower rate                          |
-| Transfer cost               | About 120 µs per sample at 1 MHz for fifteen bytes, roughly 12% of one core at 1 kHz. Measured on paper, not on hardware                                                                                             |
-| Bias is estimated once      | Per power-on, and not tracked against temperature. A long run that warms up will drift                                                                                                                               |
-| Stillness is judged by rate | Only angular rate is checked; a robot translating smoothly at constant velocity would pass                                                                                                                           |
-| Magnetometer unused         | The AK8963 in the package is not read, so there is no absolute heading reference                                                                                                                                     |
-| Single interrupt line       | Interrupt lines are keyed by pin number across all ports on this part, so the data-ready pin's number must stay unique                                                                                               |
-| No heap, no recursion       | Fixed-size state, no dynamic allocation on any path                                                                                                                                                                  |
+| Constraint                                  | Value / Description                                                                                                                                                                                                                                                                                                                                                      |
+|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Sample rate                                 | 1 kHz, set by the part's own divider. The requirement asks for at least 500 Hz; a nominal 500 would sit below it whenever the internal oscillator runs slow, so the rate is doubled rather than left on the boundary                                                                                                                                                     |
+| Bus clock                                   | 1 MHz. The part permits 20 MHz only for sensor and interrupt registers and 1 MHz elsewhere, and the adapter does not switch clocks per transaction, so the whole bus runs at the lower rate                                                                                                                                                                              |
+| Transfer cost                               | About 120 µs per sample at 1 MHz for fifteen bytes, roughly 12% of one core at 1 kHz. Measured on paper, not on hardware                                                                                                                                                                                                                                                 |
+| Bias is estimated once                      | Per power-on, and not tracked against temperature. A long run that warms up will drift                                                                                                                                                                                                                                                                                   |
+| Stillness is judged by rate                 | Only angular rate is checked; a robot translating smoothly at constant velocity would pass                                                                                                                                                                                                                                                                               |
+| Magnetometer unused                         | The AK8963 in the package is not read, so there is no absolute heading reference                                                                                                                                                                                                                                                                                         |
+| Transfer failure is invisible on this board | The SPI interface this driver sits on reports completion with no status, so a failed transfer cannot be told from a slow one. In practice a failure means no sample arrives and the output goes stale. REQ-IMU-006 is therefore only partly met on the ST board: no measurement is propagated, but the condition surfaces as staleness rather than as a transfer failure |
+| Timestamp offset                            | `sampledAt` is the delivery instant, about 120 µs after the data-ready edge — see Part B                                                                                                                                                                                                                                                                                 |
+| Single interrupt line                       | Interrupt lines are keyed by pin number across all ports on this part, so the data-ready pin's number must stay unique                                                                                                                                                                                                                                                   |
+| No heap, no recursion                       | Fixed-size state, no dynamic allocation on any path                                                                                                                                                                                                                                                                                                                      |
 
 ---
 
 ## Open Questions
 
-| # | Question                                                                             | Options                                                                      | Status                                   |
-|---|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------|------------------------------------------|
-| 1 | What is the sensor-to-body axis permutation for the fitted part?                     | Determine by tilting the assembled robot; read it off the mechanical drawing | open — identity until hardware exists    |
-| 2 | Is the stillness threshold right, and should it also bound acceleration?             | Fit from a bench recording of the robot at rest; add an acceleration bound   | open — placeholder value                 |
-| 3 | Should a failed identification read raise a fault rather than simply never sampling? | Raise it through the safety supervisor once that component exists            | open — the supervisor does not exist yet |
-| 4 | Does 12% of a core for transfers survive contact with the control loop?              | Measure on target; drop to 500 Hz; switch bus clocks per transaction         | open — unmeasured                        |
+| # | Question                                                                                    | Options                                                                                                      | Status                                   |
+|---|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| 1 | What is the sensor-to-body axis permutation for the fitted part?                            | Determine by tilting the assembled robot; read it off the mechanical drawing                                 | open — identity until hardware exists    |
+| 2 | Is the stillness threshold right, and should it also bound acceleration?                    | Fit from a bench recording of the robot at rest; add an acceleration bound                                   | open — placeholder value                 |
+| 3 | Should a failed identification read raise a fault rather than simply never sampling?        | Raise it through the safety supervisor once that component exists                                            | open — the supervisor does not exist yet |
+| 4 | Does 12% of a core for transfers survive contact with the control loop?                     | Measure on target; drop to 500 Hz; switch bus clocks per transaction                                         | open — unmeasured                        |
+| 5 | How should a failed SPI transfer become visible, given the bus interface reports no status? | Extend the bus interface with a completion status; time out a transfer in the adapter; leave it as staleness | open — staleness only, today             |
+| 6 | Should the timestamp be taken at the data-ready edge inside the driver?                     | Change the vendored driver to stamp in its handler; accept the constant delivery offset                      | open — offset accepted and documented    |

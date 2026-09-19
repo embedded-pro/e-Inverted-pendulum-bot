@@ -13,7 +13,7 @@ namespace application
         : public platform::InertialSensor
     {
     public:
-        InertialSensorStm();
+        explicit InertialSensorStm(const platform::AxisMap& axisMap);
 
         void Start(const infra::Function<void(const platform::InertialSample&)>& onSample) override;
         void Stop() override;
@@ -40,6 +40,7 @@ namespace application
         drivers::Mpu9250Core device{ busAccess, dataReady };
 
         platform::AxisMap axisMap;
+        bool sampling{ false };
         infra::Function<void(const platform::InertialSample&)> onSample;
         platform::InertialSample pending;
         bool accelerationReceived{ false };

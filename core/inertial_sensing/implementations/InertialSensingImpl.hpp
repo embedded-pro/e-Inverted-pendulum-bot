@@ -38,6 +38,7 @@ namespace sensing
         void ConcludeCalibration();
         bool Still(const platform::InertialAxes& rate) const;
         bool Stale() const;
+        bool GapSince(infra::TimePoint previous, infra::TimePoint now) const;
 
         platform::InertialSensor& sensor;
         Config config;
@@ -50,5 +51,6 @@ namespace sensing
         platform::InertialAxes biasSum;
         uint32_t biasSamples{ 0 };
         infra::TimePoint calibrationStarted;
+        infra::TimePoint lastCalibrationSample;
     };
 }

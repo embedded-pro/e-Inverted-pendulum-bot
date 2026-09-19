@@ -203,3 +203,35 @@ TEST_F(InertialSensingImplTest, a_fresh_sample_clears_staleness)
 
     EXPECT_EQ(sensing::InvalidCause::none, Sensing().Cause());
 }
+
+TEST_F(InertialSensingImplTest, calibration_fails_when_the_sensor_stalls_mid_window)
+{
+    Sensing().StartCalibration();
+
+    Deliver(0.0f, 0.0f, 0.0f);
+    ForwardTime(samplePeriod * 4);
+    Deliver(0.0f, 0.0f, 0.0f);
+
+    EXPECT_EQ(sensing::CalibrationState::failed, Sensing().Calibration());
+}
+
+TEST_F(InertialSensingImplTest, calibration_fails_when_the_first_sample_is_late)
+{
+    Sensing().StartCalibration();
+
+    ForwardTime(samplePeriod * 4);
+    Deliver(0.0f, 0.0f, 0.0f);
+
+    EXPECT_EQ(sensing::CalibrationState::failed, Sensing().Calibration());
+}
+
+TEST_F(InertialSensingImplTest, a_window_spanned_by_two_samples_is_not_accepted)
+{
+    Sensing().StartCalibration();
+
+    Deliver(0.0f, 0.0f, 0.0f);
+    ForwardTime(config.calibrationWindow);
+    Deliver(0.0f, 0.0f, 0.0f);
+
+    EXPECT_NE(sensing::CalibrationState::calibrated, Sensing().Calibration());
+}

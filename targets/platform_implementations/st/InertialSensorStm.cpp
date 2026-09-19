@@ -28,7 +28,9 @@ namespace application
         return config;
     }
 
-    InertialSensorStm::InertialSensorStm() = default;
+    InertialSensorStm::InertialSensorStm(const platform::AxisMap& axisMap)
+        : axisMap(axisMap)
+    {}
 
     void InertialSensorStm::OnAcceleration(drivers::Mpu9250Core::Accelerometer::Samples samples)
     {
@@ -87,6 +89,8 @@ namespace application
 
     void InertialSensorStm::StartSampling()
     {
+        sampling = true;
+
         device.AsAccelerometer().Start([this](drivers::Mpu9250Core::Accelerometer::Samples samples)
             {
                 OnAcceleration(samples);
@@ -105,10 +109,15 @@ namespace application
 
     void InertialSensorStm::Stop()
     {
-        device.AsGyroscope().Stop();
-        device.AsAccelerometer().Stop();
-
         onSample = nullptr;
         accelerationReceived = false;
+
+        if (!sampling)
+            return;
+
+        sampling = false;
+
+        device.AsGyroscope().Stop();
+        device.AsAccelerometer().Stop();
     }
 }
