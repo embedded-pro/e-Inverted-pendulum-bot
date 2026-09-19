@@ -74,7 +74,7 @@ namespace motion
         if (state == DisableState::brake)
         {
             // Both inputs high turns both low-side transistors on, shorting the
-            // motor. Both inputs low would release the bridge, which is a coast.
+            // motor. Both inputs low would tri-state the outputs instead.
             motors.Left().Start(Full(), Full());
             motors.Right().Start(Full(), Full());
         }

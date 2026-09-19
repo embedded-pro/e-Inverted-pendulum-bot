@@ -7,7 +7,7 @@ namespace motion
 {
     enum class DisableState : uint8_t
     {
-        coast,
+        tristate,
         brake
     };
 

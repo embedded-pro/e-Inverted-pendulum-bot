@@ -59,7 +59,7 @@ namespace application
                   {
                       Drive(params);
                   } },
-              { { "coast", "c", "release both bridges" },
+              { { "tristate", "t", "release both bridges to high impedance" },
                   [this](const infra::BoundedConstString& params)
                   {
                       ReleaseBridges(params);
@@ -119,8 +119,8 @@ namespace application
 
     void Cli::CliCommands::ReleaseBridges(const infra::BoundedConstString&)
     {
-        motionActuation.Disable(motion::DisableState::coast);
-        tracer.Trace() << "coasting";
+        motionActuation.Disable(motion::DisableState::tristate);
+        tracer.Trace() << "tristated";
     }
 
     void Cli::CliCommands::Brake(const infra::BoundedConstString&)

@@ -9,14 +9,14 @@
   title: Fall detection disarms the drive
   shall: >
     When the estimated pitch angle exceeds 35 degrees from upright while ARMED,
-    the safety supervisor shall transition to FAULT and command both motors to
-    coast within 20 milliseconds.
+    the safety supervisor shall transition to FAULT and command both motor
+    bridges to tri-state within 20 milliseconds.
 
 - id: REQ-SAFE-003
-  title: Motors coast on disarm
+  title: Motor bridges tri-state on disarm
   shall: >
     On any transition out of ARMED the system shall place both motor bridges in a
-    high-impedance coasting state rather than actively braking.
+    high-impedance tri-state rather than actively braking.
 
 - id: REQ-SAFE-004
   title: Faults latch until acknowledged

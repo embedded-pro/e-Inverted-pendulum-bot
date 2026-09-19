@@ -171,15 +171,15 @@ TEST_F(CliTest, drive_is_refused_while_a_fault_is_latched)
     EXPECT_THAT(Output(), testing::HasSubstr("refused"));
 }
 
-TEST_F(CliTest, coast_releases_the_bridges)
+TEST_F(CliTest, tristate_releases_the_bridges)
 {
     application::Cli cli{ platform, motionActuation };
 
-    EXPECT_CALL(motionActuation, Disable(motion::DisableState::coast));
+    EXPECT_CALL(motionActuation, Disable(motion::DisableState::tristate));
 
-    Send("coast");
+    Send("tristate");
 
-    EXPECT_THAT(Output(), testing::HasSubstr("coasting"));
+    EXPECT_THAT(Output(), testing::HasSubstr("tristated"));
 }
 
 TEST_F(CliTest, brake_shorts_the_motors)

@@ -160,15 +160,15 @@ graph LR
 
 ### Required Interfaces
 
-| Interface                                    | Direction | Purpose                                                      | Invariants                                                                                                           |
-|----------------------------------------------|-----------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| Inertial measurement source                  | required  | Angular rate and acceleration in the body frame              | Fixed axis convention independent of the part fitted; failure and staleness are reported, never silently substituted |
-| Wheel encoder source                         | required  | Signed incremental counts and index events per wheel         | Lossless across counter wrap; forward motion is positive on both wheels                                              |
-| Motor bridge control                         | required  | Signed effort per motor, plus coast and brake disable states | Coast is always available; disable must not require a healthy control loop                                           |
-| Motor driver configuration and fault channel | required  | Configure the driver and observe its fault output            | Configuration is verified by read-back; an asserted fault disables both bridges                                      |
-| Bluetooth peripheral                         | required  | Advertising, connection lifecycle, pairing, GATT database    | Connection loss is observable to the application                                                                     |
-| Non-volatile parameter store                 | required  | Persist the strategy selection and its parameters            | A failed or absent store degrades to built-in defaults rather than blocking startup                                  |
-| Timebase                                     | required  | Drive the control loops and measure latency and jitter       | Monotonic; periods are met within the specified jitter bound                                                         |
+| Interface                                    | Direction | Purpose                                                          | Invariants                                                                                                           |
+|----------------------------------------------|-----------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Inertial measurement source                  | required  | Angular rate and acceleration in the body frame                  | Fixed axis convention independent of the part fitted; failure and staleness are reported, never silently substituted |
+| Wheel encoder source                         | required  | Signed incremental counts and index events per wheel             | Lossless across counter wrap; forward motion is positive on both wheels                                              |
+| Motor bridge control                         | required  | Signed effort per motor, plus tri-state and brake disable states | The tri-state is always available; disable must not require a healthy control loop                                   |
+| Motor driver configuration and fault channel | required  | Configure the driver and observe its fault output                | Configuration is verified by read-back; an asserted fault disables both bridges                                      |
+| Bluetooth peripheral                         | required  | Advertising, connection lifecycle, pairing, GATT database        | Connection loss is observable to the application                                                                     |
+| Non-volatile parameter store                 | required  | Persist the strategy selection and its parameters                | A failed or absent store degrades to built-in defaults rather than blocking startup                                  |
+| Timebase                                     | required  | Drive the control loops and measure latency and jitter           | Monotonic; periods are met within the specified jitter bound                                                         |
 
 ---
 
@@ -201,7 +201,7 @@ sequenceDiagram
 
     Note over Est,Safety: Body tips beyond the fall threshold
     Est->>Safety: Pitch exceeds limit
-    Safety->>Act: Coast both bridges
+    Safety->>Act: Tri-state both bridges
     Safety->>Ctrl: Disable
     Safety-->>Link: Mode = FAULT, cause latched
 ```
@@ -215,7 +215,7 @@ sequenceDiagram
 | Error handling | No exceptions in runtime code. Nullable results are optional values; failures are explicit error enumerations. Sensor failures propagate as an invalid estimate rather than a substituted value |
 | Timing budget  | Balance loop 500 Hz, outer velocity and yaw loop 50 Hz, telemetry 25 Hz. Sensor-to-actuator latency at most 3 ms; loop start jitter within 10% of the period                                    |
 | Memory         | No heap after startup; bounded containers only; worst-case stack depth determined at build time                                                                                                 |
-| Safety         | The supervisor can always reach a safe state. Disabling the drive does not depend on the control loop being healthy; all safety-initiated disables coast rather than brake                      |
+| Safety         | The supervisor can always reach a safe state. Disabling the drive does not depend on the control loop being healthy; all safety-initiated disables tri-state rather than brake                  |
 | Determinism    | No recursion and no unbounded iteration on the control path. Strategy selection is confined to a non-ARMED state so that the armed control path has fixed cost                                  |
 | Testability    | Every component is written against the platform abstraction and exercised on the host with mocks; specification scenarios live in `documentation/use-cases/`                                    |
 | Portability    | Boards differ only in their platform implementation; the host build is a first-class target                                                                                                     |

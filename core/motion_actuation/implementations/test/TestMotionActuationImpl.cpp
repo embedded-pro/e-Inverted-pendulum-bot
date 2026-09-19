@@ -109,16 +109,16 @@ TEST_F(MotionActuationImplTest, zero_effort_holds_both_inputs_low)
     actuation->Apply(0.0f, 0.0f);
 }
 
-TEST_F(MotionActuationImplTest, coast_releases_both_bridges)
+TEST_F(MotionActuationImplTest, tristate_releases_both_bridges)
 {
     EXPECT_CALL(left, Stop());
     EXPECT_CALL(right, Stop());
 
-    actuation->Disable(motion::DisableState::coast);
+    actuation->Disable(motion::DisableState::tristate);
 }
 
 // Both inputs high turns both low-side transistors on, which shorts the motor.
-// Both inputs low would release the bridge, which is a coast, not a brake.
+// Both inputs low tri-states the outputs instead, which is not a brake.
 TEST_F(MotionActuationImplTest, brake_drives_both_inputs_high)
 {
     EXPECT_CALL(left, Start(hal::Percent{ 100 }, hal::Percent{ 100 }));
@@ -127,7 +127,7 @@ TEST_F(MotionActuationImplTest, brake_drives_both_inputs_high)
     actuation->Disable(motion::DisableState::brake);
 }
 
-TEST_F(MotionActuationImplTest, driver_fault_coasts_and_latches)
+TEST_F(MotionActuationImplTest, driver_fault_tristates_and_latches)
 {
     EXPECT_CALL(left, Stop());
     EXPECT_CALL(right, Stop());
