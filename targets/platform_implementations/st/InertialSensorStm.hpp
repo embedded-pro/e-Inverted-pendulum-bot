@@ -46,5 +46,6 @@ namespace application
         bool accelerationReceived{ false };
         bool identified{ false };
         bool initializing{ false };
+        bool stopping{ false };
     };
 }

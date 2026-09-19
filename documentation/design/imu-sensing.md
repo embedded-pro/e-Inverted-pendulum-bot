@@ -158,10 +158,10 @@ would stay true forever at exactly the moment it stopped being true.
 
 ### Required
 
-| Interface       | Purpose                                      | Contract                                                                         |
-|-----------------|----------------------------------------------|----------------------------------------------------------------------------------|
-| Inertial sensor | Six-axis samples in the body frame           | Pushed as they are produced, timestamped at capture, flagged on transfer failure |
-| Timebase        | Judging staleness and the calibration window | Monotonic; the measured instant is used, never a nominal one                     |
+| Interface       | Purpose                                      | Contract                                                                          |
+|-----------------|----------------------------------------------|-----------------------------------------------------------------------------------|
+| Inertial sensor | Six-axis samples in the body frame           | Pushed as they are produced, timestamped at delivery, flagged on transfer failure |
+| Timebase        | Judging staleness and the calibration window | Monotonic; the measured instant is used, never a nominal one                      |
 
 ---
 
@@ -251,7 +251,7 @@ graph LR
     PART[MPU9250] -->|data ready| INT[Interrupt]
     INT --> READ[Burst read]
     PART -->|six axes| READ
-    READ --> STAMP[Timestamp at capture]
+    READ --> STAMP[Timestamp at delivery]
     STAMP --> MAP[Axis map and SI conversion]
     MAP --> BIAS[Subtract gyroscope bias]
     MAP --> CAL[Calibration accumulator]

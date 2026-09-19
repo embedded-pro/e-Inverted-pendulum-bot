@@ -294,9 +294,9 @@ TEST_F(CliTest, imu_reports_the_latest_sample_and_its_validity)
     measurement.angularRate = { 0.5f, -0.25f, 0.125f };
     measurement.acceleration = { 0.0f, 0.0f, -9.80665f };
     measurement.valid = true;
+    measurement.cause = sensing::InvalidCause::none;
 
     EXPECT_CALL(inertialSensing, Latest()).WillOnce(testing::Return(measurement));
-    EXPECT_CALL(inertialSensing, Cause()).WillOnce(testing::Return(sensing::InvalidCause::none));
 
     Send("imu");
 
@@ -309,8 +309,10 @@ TEST_F(CliTest, imu_reports_an_invalid_sample_as_such)
 {
     application::Cli cli{ platform, motionActuation, wheelOdometry, inertialSensing };
 
-    EXPECT_CALL(inertialSensing, Latest()).WillOnce(testing::Return(sensing::Measurement{}));
-    EXPECT_CALL(inertialSensing, Cause()).WillOnce(testing::Return(sensing::InvalidCause::stale));
+    sensing::Measurement stale;
+    stale.cause = sensing::InvalidCause::stale;
+
+    EXPECT_CALL(inertialSensing, Latest()).WillOnce(testing::Return(stale));
 
     Send("imu");
 

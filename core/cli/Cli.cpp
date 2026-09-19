@@ -157,7 +157,7 @@ namespace application
 
         tracer.Trace() << "rate " << measurement.angularRate.x << " " << measurement.angularRate.y << " " << measurement.angularRate.z << " rad/s";
         tracer.Trace() << "accel " << measurement.acceleration.x << " " << measurement.acceleration.y << " " << measurement.acceleration.z << " m/s2";
-        tracer.Trace() << "valid " << (measurement.valid ? "yes" : "no") << " cause " << static_cast<uint32_t>(inertialSensing.Cause());
+        tracer.Trace() << "valid " << (measurement.valid ? "yes" : "no") << " cause " << static_cast<uint32_t>(measurement.cause);
     }
 
     void Cli::CliCommands::Calibrate(const infra::BoundedConstString&)

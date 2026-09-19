@@ -27,6 +27,7 @@ namespace sensing
         platform::InertialAxes acceleration;
         infra::TimePoint sampledAt;
         bool valid{ false };
+        InvalidCause cause{ InvalidCause::neverSampled };
     };
 
     class InertialSensing

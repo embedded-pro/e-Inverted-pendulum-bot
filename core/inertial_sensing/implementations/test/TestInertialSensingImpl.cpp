@@ -69,6 +69,7 @@ TEST_F(InertialSensingImplTest, nothing_is_reported_before_the_first_sample)
 {
     EXPECT_FALSE(Sensing().Latest().valid);
     EXPECT_EQ(sensing::InvalidCause::neverSampled, Sensing().Cause());
+    EXPECT_EQ(sensing::InvalidCause::neverSampled, Sensing().Latest().cause);
 }
 
 TEST_F(InertialSensingImplTest, a_sample_before_calibration_is_not_usable)
@@ -77,6 +78,7 @@ TEST_F(InertialSensingImplTest, a_sample_before_calibration_is_not_usable)
 
     EXPECT_FALSE(Sensing().Latest().valid);
     EXPECT_EQ(sensing::InvalidCause::uncalibrated, Sensing().Cause());
+    EXPECT_EQ(sensing::InvalidCause::uncalibrated, Sensing().Latest().cause);
 }
 
 TEST_F(InertialSensingImplTest, a_failed_transfer_is_reported_and_not_propagated)
@@ -89,6 +91,7 @@ TEST_F(InertialSensingImplTest, a_failed_transfer_is_reported_and_not_propagated
 
     EXPECT_FALSE(Sensing().Latest().valid);
     EXPECT_EQ(sensing::InvalidCause::transferFailed, Sensing().Cause());
+    EXPECT_EQ(sensing::InvalidCause::transferFailed, Sensing().Latest().cause);
 }
 
 TEST_F(InertialSensingImplTest, bias_is_the_mean_rate_measured_while_still)
@@ -177,6 +180,7 @@ TEST_F(InertialSensingImplTest, a_sample_stays_usable_within_three_periods)
 
     EXPECT_TRUE(Sensing().Latest().valid);
     EXPECT_EQ(sensing::InvalidCause::none, Sensing().Cause());
+    EXPECT_EQ(sensing::InvalidCause::none, Sensing().Latest().cause);
 }
 
 TEST_F(InertialSensingImplTest, a_stalled_sensor_is_reported_as_stale)
@@ -189,6 +193,7 @@ TEST_F(InertialSensingImplTest, a_stalled_sensor_is_reported_as_stale)
 
     EXPECT_FALSE(Sensing().Latest().valid);
     EXPECT_EQ(sensing::InvalidCause::stale, Sensing().Cause());
+    EXPECT_EQ(sensing::InvalidCause::stale, Sensing().Latest().cause);
 }
 
 TEST_F(InertialSensingImplTest, a_fresh_sample_clears_staleness)

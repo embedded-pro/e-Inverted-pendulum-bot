@@ -70,6 +70,9 @@ namespace application
         this->onSample = onSample;
         accelerationReceived = false;
 
+        if (stopping)
+            return;
+
         if (identified)
             StartSampling();
         else if (!initializing)
@@ -112,12 +115,20 @@ namespace application
         onSample = nullptr;
         accelerationReceived = false;
 
-        if (!sampling)
+        if (stopping || (!sampling && !initializing))
             return;
 
         sampling = false;
+        stopping = true;
 
-        device.AsGyroscope().Stop();
-        device.AsAccelerometer().Stop();
+        device.Stop([this]()
+            {
+                stopping = false;
+                initializing = false;
+                identified = false;
+
+                if (this->onSample)
+                    Start(this->onSample);
+            });
     }
 }

@@ -100,6 +100,8 @@ namespace sensing
     {
         Measurement measurement;
 
+        measurement.cause = Cause();
+
         if (!sampled)
             return measurement;
 
@@ -110,7 +112,7 @@ namespace sensing
         measurement.angularRate.y = lastSample.angularRate.y - bias.y;
         measurement.angularRate.z = lastSample.angularRate.z - bias.z;
 
-        measurement.valid = Cause() == InvalidCause::none;
+        measurement.valid = measurement.cause == InvalidCause::none;
 
         return measurement;
     }
