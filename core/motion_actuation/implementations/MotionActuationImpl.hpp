@@ -19,7 +19,7 @@ namespace motion
             hal::Hertz switchingFrequency{ 25000 };
         };
 
-        MotionActuationImpl(platform::MotorDriver& motors, const Config& config = Config());
+        explicit MotionActuationImpl(platform::MotorDriver& motors, const Config& config = Config());
         MotionActuationImpl(const MotionActuationImpl& other) = delete;
         MotionActuationImpl& operator=(const MotionActuationImpl& other) = delete;
         ~MotionActuationImpl();
