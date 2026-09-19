@@ -71,6 +71,14 @@ ripple is not symmetric. Commanded magnitude is unaffected and the effort mappin
 monotonic, which is what Part C requires. The two motors also no longer share a timer, so
 their switching edges are not phase-locked.
 
+Two further consequences follow from the timers the motors land on. Those instances have no
+counter-mode selection, so the PWM is edge-aligned rather than centre-aligned, which raises
+current ripple relative to the arrangement a full-featured timer allows. And compare preload is
+disabled, so a duty cycle written mid-period takes effect immediately: a reversal must drop the
+magnitude to zero before the direction changes, and a preloaded write would defer that zero to the
+next update, leaving the old magnitude applied in the new direction for a full period. A runt pulse
+on an ordinary duty change is the lesser fault.
+
 It also moves one input off the timer, and that has a safety consequence the board must
 answer for. A break event forces a timer output to its idle state, which is low, but it
 cannot touch a pin the timer does not own. With the magnitude input released and the

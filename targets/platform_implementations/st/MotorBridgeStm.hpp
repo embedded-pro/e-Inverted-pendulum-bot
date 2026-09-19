@@ -22,5 +22,6 @@ namespace application
         std::array<hal::PwmStmBase::ChannelConfig, 1> channels;
         hal::SynchronousPwmStm pwm;
         hal::OutputPin direction;
+        bool directionHigh{ false };
     };
 }

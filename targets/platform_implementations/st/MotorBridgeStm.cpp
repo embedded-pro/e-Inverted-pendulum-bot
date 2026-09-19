@@ -18,7 +18,13 @@ namespace application
     {
         const auto command = platform::AsSignMagnitude(input1, input2);
 
-        direction.Set(command.secondInputHigh);
+        if (command.secondInputHigh != directionHigh)
+        {
+            pwm.Start(hal::Percent{ 0 });
+            direction.Set(command.secondInputHigh);
+            directionHigh = command.secondInputHigh;
+        }
+
         pwm.Start(command.dutyCycle);
     }
 

@@ -6,7 +6,8 @@ namespace application
     {
         hal::PwmStmBase::Config config;
 
-        config.alignment = hal::PwmStmBase::Alignment::centerAlignedBothCounting;
+        config.alignment = hal::PwmStmBase::Alignment::edgeAligned;
+        config.preloadEnabled = false;
 
         hal::PwmStmBase::BreakInput breakInput;
         breakInput.activeHigh = false;
