@@ -36,13 +36,14 @@ namespace odometry
         };
 
         void Sample();
-        void SampleWheel(Wheel& wheel, hal::SynchronousQuadratureEncoder& encoder) const;
+        void SampleWheel(Wheel& wheel, hal::SynchronousQuadratureEncoder& encoder, infra::Duration elapsed) const;
         static int32_t ShortestDelta(uint32_t previous, uint32_t current, uint32_t resolution);
 
         platform::WheelEncoders& encoders;
         Config config;
         Wheel left;
         Wheel right;
+        infra::TimePoint previousSampleTime;
         infra::TimerRepeating sampleTimer;
     };
 }

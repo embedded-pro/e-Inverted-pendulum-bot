@@ -168,6 +168,20 @@ TEST_F(WheelOdometryImplTest, angular_velocity_is_signed_by_the_direction_of_tra
     EXPECT_NEAR(AngularVelocityOf(40), Odometry().Right().angularVelocity, 1e-4f);
 }
 
+TEST_F(WheelOdometryImplTest, velocity_divides_by_the_measured_interval_not_the_configured_one)
+{
+    Sample(0, 0);
+
+    EXPECT_CALL(leftEncoder, Position()).WillOnce(testing::Return(40));
+    EXPECT_CALL(rightEncoder, Position()).WillOnce(testing::Return(40));
+    systemTimerService.TimeProgressed(samplePeriod * 2);
+    ExecuteAllActions();
+
+    EXPECT_NEAR(AngularVelocityOf(40) / 2.0f, Odometry().Left().angularVelocity, 1e-4f);
+    EXPECT_NEAR(AngularVelocityOf(40) / 2.0f, Odometry().Right().angularVelocity, 1e-4f);
+    EXPECT_EQ(40, Odometry().Left().position);
+}
+
 TEST_F(WheelOdometryImplTest, velocity_returns_to_zero_once_the_wheels_stop)
 {
     Sample(0, 0);

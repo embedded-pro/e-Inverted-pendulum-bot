@@ -116,6 +116,14 @@ sign far more than it needs the magnitude, so velocity is instead the displaceme
 last interval divided by the interval, which is signed by construction and consistent with
 the position it is derived from.
 
+The divisor is the interval that was *measured*, not the one that was configured. The platform
+abstraction states this as a contract — "the timebase is monotonic and measured intervals, not
+nominal ones, are what callers receive" — and it matters because the repeating timer re-anchors
+to its original grid rather than drifting. A callback that arrives late does not shift the
+schedule; it skips a period. Dividing two periods of counts by one period would report a
+velocity twice the truth, at exactly the moment the system was already under strain, so each
+sample reads the clock and divides by the time that actually passed.
+
 Velocity therefore inherits the counting resolution directly: one count per interval is
 0.077 rad/s at the wheel, about 2.6 mm/s of ground speed. Sampling faster would lower the
 aliasing ceiling in Part B *and* make velocity noisier, because the same one-count
@@ -164,25 +172,25 @@ the sampling and cannot advance, reset or reseed the accumulated position.
 
 ### Required
 
-| Interface         | Purpose                                | Contract                                                                                        |
-|-------------------|----------------------------------------|-------------------------------------------------------------------------------------------------|
-| Wheel encoders    | Counter value and resolution per wheel | Counter strictly below the resolution; resolution at least two and constant                     |
-| Periodic timebase | Drive the sampling cadence             | Fires on the configured period; a sample must not be skipped or the ceiling in Part B is halved |
+| Interface         | Purpose                                    | Contract                                                                                                                                                                                        |
+|-------------------|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Wheel encoders    | Counter value and resolution per wheel     | Counter strictly below the resolution; resolution at least two and constant                                                                                                                     |
+| Periodic timebase | Drive the sampling cadence, and measure it | Monotonic; fires on the configured period and reports the interval that actually elapsed. A skipped sample does not corrupt velocity, but it does halve the ceiling in Part B for that interval |
 
 ---
 
 ## Data Model
 
-| Entity         | Field           | Type / Unit        | Range             | Notes                                                         |
-|----------------|-----------------|--------------------|-------------------|---------------------------------------------------------------|
-| Wheel motion   | position        | encoder counts     | full signed range | Accumulated across hardware wrap; zero at construction        |
-| Wheel motion   | angularVelocity | radians per second | -105 to 105       | Displacement of the last interval over the sample period      |
-| Chassis motion | forwardVelocity | metres per second  | -1.5 to 1.5       | Mean of both wheel velocities times the wheel radius          |
-| Chassis motion | yawRate         | radians per second | -3.1 to 3.1       | Wheel difference times radius over track width; positive left |
-| Configuration  | samplePeriod    | microseconds       | greater than zero | Bounds the maximum trackable wheel rate — see Part B          |
-| Configuration  | wheelRadius     | metres             | greater than zero | Fitted value; documented in one place only                    |
-| Configuration  | trackWidth      | metres             | greater than zero | Distance between the wheel contact patches                    |
-| Configuration  | gearRatio       | encoder per wheel  | greater than zero | Encoder revolutions per wheel revolution; one when direct     |
+| Entity         | Field           | Type / Unit        | Range             | Notes                                                                                                                         |
+|----------------|-----------------|--------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Wheel motion   | position        | encoder counts     | full signed range | Accumulated across hardware wrap; zero at construction                                                                        |
+| Wheel motion   | angularVelocity | radians per second | -105 to 105       | Displacement of the last interval over the sample period                                                                      |
+| Chassis motion | forwardVelocity | metres per second  | -1.5 to 1.5       | Mean of both wheel velocities times the wheel radius                                                                          |
+| Chassis motion | yawRate         | radians per second | -3.1 to 3.1       | Wheel difference times radius over track width; positive left                                                                 |
+| Configuration  | samplePeriod    | microseconds       | greater than zero | Sets the cadence and bounds the trackable wheel rate — see Part B. Not used as a divisor; velocity uses the measured interval |
+| Configuration  | wheelRadius     | metres             | greater than zero | Fitted value; documented in one place only                                                                                    |
+| Configuration  | trackWidth      | metres             | greater than zero | Distance between the wheel contact patches                                                                                    |
+| Configuration  | gearRatio       | encoder per wheel  | greater than zero | Encoder revolutions per wheel revolution; one when direct                                                                     |
 
 ---
 
@@ -274,17 +282,17 @@ graph LR
 
 ## Constraints & Limitations
 
-| Constraint                   | Value / Description                                                                                                                                         |
-|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Maximum trackable wheel rate | Just under half the resolution per sample — 2047 counts, under 25 rev/s at 4096 counts and 20 ms. Beyond it the position is wrong by a revolution, silently |
-| Exactly half the resolution  | Inherently ambiguous; the tie falls to the raw difference, so the sign follows the order the readings were taken in — see Part A                            |
-| Missed sample                | A skipped period halves the ceiling for that interval, and reports the two periods' motion as one period's velocity                                         |
-| Velocity quantisation        | One count per period: 0.077 rad/s at the wheel, about 2.6 mm/s of ground speed                                                                              |
-| Velocity is unfiltered       | A single-interval difference; consumers needing smoothness filter at their own bandwidth                                                                    |
-| Geometry is nominal          | Wheel radius, track width and gear ratio are configured values, not measured ones; nothing here detects a wrong one                                         |
-| Slip is invisible            | A wheel that spins without the chassis moving reports motion that did not happen. Odometry is dead reckoning                                                |
-| Accumulator range            | Signed 32-bit counts — about 524 288 revolutions at the default resolution, far beyond any run length                                                       |
-| No heap, no recursion        | Fixed-size state, two wheels, no dynamic allocation on any path                                                                                             |
+| Constraint                   | Value / Description                                                                                                                                                         |
+|------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Maximum trackable wheel rate | Just under half the resolution per sample — 2047 counts, under 25 rev/s at 4096 counts and 20 ms. Beyond it the position is wrong by a revolution, silently                 |
+| Exactly half the resolution  | Inherently ambiguous; the tie falls to the raw difference, so the sign follows the order the readings were taken in — see Part A                                            |
+| Missed sample                | Velocity stays correct — the measured interval is the divisor, so two periods of counts are divided by two periods — but the wrap ceiling above is halved for that interval |
+| Velocity quantisation        | One count per period: 0.077 rad/s at the wheel, about 2.6 mm/s of ground speed                                                                                              |
+| Velocity is unfiltered       | A single-interval difference; consumers needing smoothness filter at their own bandwidth                                                                                    |
+| Geometry is nominal          | Wheel radius, track width and gear ratio are configured values, not measured ones; nothing here detects a wrong one                                                         |
+| Slip is invisible            | A wheel that spins without the chassis moving reports motion that did not happen. Odometry is dead reckoning                                                                |
+| Accumulator range            | Signed 32-bit counts — about 524 288 revolutions at the default resolution, far beyond any run length                                                                       |
+| No heap, no recursion        | Fixed-size state, two wheels, no dynamic allocation on any path                                                                                                             |
 
 ---
 

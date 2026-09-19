@@ -18,6 +18,7 @@ namespace odometry
     WheelOdometryImpl::WheelOdometryImpl(platform::WheelEncoders& encoders, const Config& config)
         : encoders(encoders)
         , config(config)
+        , previousSampleTime{ infra::Now() }
         , sampleTimer{ VerifiedSamplePeriod(config.samplePeriod), [this]()
             {
                 Sample();
@@ -41,7 +42,7 @@ namespace odometry
         return delta;
     }
 
-    void WheelOdometryImpl::SampleWheel(Wheel& wheel, hal::SynchronousQuadratureEncoder& encoder) const
+    void WheelOdometryImpl::SampleWheel(Wheel& wheel, hal::SynchronousQuadratureEncoder& encoder, infra::Duration elapsed) const
     {
         const auto resolution = encoder.Resolution();
         const auto raw = encoder.Position();
@@ -59,7 +60,7 @@ namespace odometry
         const auto delta = ShortestDelta(wheel.previousRaw, raw, resolution);
         wheel.previousRaw = raw;
 
-        const auto seconds = std::chrono::duration<float>(config.samplePeriod).count();
+        const auto seconds = std::chrono::duration<float>(elapsed).count();
         const auto countsPerWheelRevolution = static_cast<float>(resolution) * config.gearRatio;
 
         wheel.motion.position += delta;
@@ -68,8 +69,14 @@ namespace odometry
 
     void WheelOdometryImpl::Sample()
     {
-        SampleWheel(left, encoders.Left());
-        SampleWheel(right, encoders.Right());
+        const auto now = infra::Now();
+        const auto elapsed = now - previousSampleTime;
+        previousSampleTime = now;
+
+        really_assert(elapsed > infra::Duration::zero());
+
+        SampleWheel(left, encoders.Left(), elapsed);
+        SampleWheel(right, encoders.Right(), elapsed);
     }
 
     WheelMotion WheelOdometryImpl::Left() const
