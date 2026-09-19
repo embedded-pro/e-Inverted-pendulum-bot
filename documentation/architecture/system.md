@@ -96,17 +96,17 @@ graph TD
 
 ## Component Decomposition
 
-| Sub-component             | Responsibility                                                                                                        |
-|---------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| Inertial sensing          | Acquire calibrated angular rate and acceleration in the body frame; signal staleness and transfer failure             |
-| Wheel odometry            | Accumulate decoded counts into signed wheel position and velocity; derive chassis forward velocity and yaw rate       |
-| Attitude estimation       | Fuse inertial measurements into body pitch and pitch rate with an explicit validity indication                        |
-| Balance control           | Host the interchangeable control strategies; turn estimated state and setpoints into per-wheel effort                 |
-| Motion actuation          | Configure the motor driver, map effort onto bridge duty and direction, surface driver faults                          |
-| Safety supervision        | Own the operating mode; arm, disarm, detect faults, latch them, and force the drive to a safe state                   |
-| Connectivity              | Present the GATT server: teleoperation, telemetry, tuning and mode control                                            |
-| Application orchestration | Compose the components, schedule the control loops, route setpoints and telemetry                                     |
-| Platform abstraction      | Declare the peripheral roles the application needs; realised per board and mocked for tests                           |
+| Sub-component             | Responsibility                                                                                                              |
+|---------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Inertial sensing          | Acquire calibrated angular rate and acceleration in the body frame; signal staleness and transfer failure                   |
+| Wheel odometry            | Accumulate the decoded encoder counts into signed wheel position and velocity; derive chassis forward velocity and yaw rate |
+| Attitude estimation       | Fuse inertial measurements into body pitch and pitch rate with an explicit validity indication                              |
+| Balance control           | Host the interchangeable control strategies; turn estimated state and setpoints into per-wheel effort                       |
+| Motion actuation          | Configure the motor driver, map effort onto bridge duty and direction, surface driver faults                                |
+| Safety supervision        | Own the operating mode; arm, disarm, detect faults, latch them, and force the drive to a safe state                         |
+| Connectivity              | Present the GATT server: teleoperation, telemetry, tuning and mode control                                                  |
+| Application orchestration | Compose the components, schedule the control loops, route setpoints and telemetry                                           |
+| Platform abstraction      | Declare the peripheral roles the application needs; realised per board and mocked for tests                                 |
 
 ```mermaid
 graph LR
