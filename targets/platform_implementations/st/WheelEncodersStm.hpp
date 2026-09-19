@@ -3,7 +3,6 @@
 #include "core/platform_abstraction/WheelEncoders.hpp"
 #include "hal_st/stm32fxxx/GpioStm.hpp"
 #include "hal_st/synchronous_stm32fxxx/SynchronousQuadratureEncoderStm.hpp"
-#include <chrono>
 
 namespace application
 {
@@ -17,8 +16,6 @@ namespace application
         hal::SynchronousQuadratureEncoder& Right() override;
 
     private:
-        static constexpr std::chrono::microseconds speedSamplePeriod{ 2000 };
-
         static hal::SynchronousQuadratureEncoderStm::Config EncoderConfig(bool mirrored);
 
         hal::GpioPinStm leftPhaseA{ hal::Port::A, 8 };

@@ -27,18 +27,19 @@ namespace application
         }
     }
 
-    Cli::Cli(platform::Platform& platform, motion::MotionActuation& motionActuation)
+    Cli::Cli(platform::Platform& platform, motion::MotionActuation& motionActuation, odometry::WheelOdometry& wheelOdometry)
         : debugLed{ platform.StatusLed() }
         , terminal{ platform.Communication(), platform.Tracer() }
-        , commands{ terminal, platform.Tracer(), motionActuation }
+        , commands{ terminal, platform.Tracer(), motionActuation, wheelOdometry }
     {
-        platform.Tracer().Trace() << "inverted-pendulum-bot ready - try 'ping', 'id' or 'drive <left> <right>'";
+        platform.Tracer().Trace() << "inverted-pendulum-bot ready - try 'ping', 'id', 'drive <left> <right>' or 'odom'";
     }
 
-    Cli::CliCommands::CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer, motion::MotionActuation& motionActuation)
+    Cli::CliCommands::CliCommands(services::TerminalWithCommands& terminal, services::Tracer& tracer, motion::MotionActuation& motionActuation, odometry::WheelOdometry& wheelOdometry)
         : services::TerminalCommands(terminal)
         , tracer(tracer)
         , motionActuation(motionActuation)
+        , wheelOdometry(wheelOdometry)
         , commands{ {
               { { "ping", "p", "reply with pong" },
                   [this](const infra::BoundedConstString& params)
@@ -64,6 +65,11 @@ namespace application
                   [this](const infra::BoundedConstString& params)
                   {
                       Brake(params);
+                  } },
+              { { "odom", "o", "print wheel and chassis motion" },
+                  [this](const infra::BoundedConstString& params)
+                  {
+                      Odometry(params);
                   } },
           } }
     {}
@@ -121,5 +127,16 @@ namespace application
     {
         motionActuation.Disable(motion::DisableState::brake);
         tracer.Trace() << "braking";
+    }
+
+    void Cli::CliCommands::Odometry(const infra::BoundedConstString&)
+    {
+        const auto left = wheelOdometry.Left();
+        const auto right = wheelOdometry.Right();
+        const auto chassis = wheelOdometry.Chassis();
+
+        tracer.Trace() << "left " << left.position << " counts " << left.angularVelocity << " rad/s";
+        tracer.Trace() << "right " << right.position << " counts " << right.angularVelocity << " rad/s";
+        tracer.Trace() << "chassis " << chassis.forwardVelocity << " m/s " << chassis.yawRate << " rad/s";
     }
 }

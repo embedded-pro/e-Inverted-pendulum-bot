@@ -8,7 +8,6 @@ namespace application
 
         config.decodeMode = hal::SynchronousQuadratureEncoderStm::Config::DecodeMode::x4OnBothPhases;
         config.invertPhaseA = mirrored;
-        config.speedSamplePeriod = speedSamplePeriod;
 
         return config;
     }
