@@ -6,11 +6,9 @@ namespace application
     {
         hal::PwmStmBase::Config config;
 
-        // Centre-aligned keeps current ripple low through a brushed motor.
-        config.alignment = hal::PwmStmBase::Alignment::centerAlignedBothCounting;
+        config.alignment = hal::PwmStmBase::Alignment::edgeAligned;
+        config.preloadEnabled = false;
 
-        // nFAULT reaches the break input, so a fault releases all four outputs in
-        // hardware without firmware cooperation.
         hal::PwmStmBase::BreakInput breakInput;
         breakInput.activeHigh = false;
         config.breakInput = breakInput;
@@ -19,13 +17,8 @@ namespace application
     }
 
     MotorDriverStm::MotorDriverStm()
-        : channels{ { { 1, leftInput1 },
-              { 2, leftInput2 },
-              { 3, rightInput1 },
-              { 4, rightInput2 } } }
-        , pwm(1, channels, breakPin, PwmConfig())
-        , left(pwm, dutyCycles, 0)
-        , right(pwm, dutyCycles, 2)
+        : left(16, leftPwm, leftBreak, leftDirection, PwmConfig())
+        , right(17, rightPwm, rightBreak, rightDirection, PwmConfig())
     {}
 
     platform::MotorBridge& MotorDriverStm::Left()
@@ -40,7 +33,6 @@ namespace application
 
     void MotorDriverStm::EnableFaultNotification(const infra::Function<void()>& onFault)
     {
-        // The DRV8711 pulls nFAULT low on assertion.
         faultPin.EnableInterrupt(onFault, hal::InterruptTrigger::fallingEdge);
     }
 

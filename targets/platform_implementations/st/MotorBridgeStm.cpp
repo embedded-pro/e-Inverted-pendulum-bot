@@ -1,11 +1,12 @@
 #include "targets/platform_implementations/st/MotorBridgeStm.hpp"
+#include "core/platform_abstraction/SignMagnitude.hpp"
 
 namespace application
 {
-    MotorBridgeStm::MotorBridgeStm(hal::SynchronousPwmStm& pwm, infra::MemoryRange<hal::Percent> dutyCycles, std::size_t firstInput)
-        : pwm(pwm)
-        , dutyCycles(dutyCycles)
-        , firstInput(firstInput)
+    MotorBridgeStm::MotorBridgeStm(uint8_t timerOneBasedIndex, hal::GpioPinStm& pwmPin, hal::GpioPinStm& breakPin, hal::GpioPin& directionPin, const hal::PwmStmBase::Config& config)
+        : channels{ { { 1, pwmPin } } }
+        , pwm(timerOneBasedIndex, channels, breakPin, config)
+        , direction(directionPin)
     {}
 
     void MotorBridgeStm::SetBaseFrequency(hal::Hertz baseFrequency)
@@ -15,10 +16,16 @@ namespace application
 
     void MotorBridgeStm::Start(hal::Percent input1, hal::Percent input2)
     {
-        dutyCycles[firstInput] = input1;
-        dutyCycles[firstInput + 1] = input2;
+        const auto command = platform::AsSignMagnitude(input1, input2);
 
-        pwm.Start(dutyCycles[0], dutyCycles[1], dutyCycles[2], dutyCycles[3]);
+        if (command.secondInputHigh != directionHigh)
+        {
+            pwm.Start(hal::Percent{ 0 });
+            direction.Set(command.secondInputHigh);
+            directionHigh = command.secondInputHigh;
+        }
+
+        pwm.Start(command.dutyCycle);
     }
 
     void MotorBridgeStm::Stop()

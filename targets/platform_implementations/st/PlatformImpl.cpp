@@ -1,7 +1,5 @@
 #include "targets/platform_implementations/st/PlatformImpl.hpp"
 
-// Referenced by the hal_st clock configuration. The NUCLEO-WB55RG has a 32 MHz
-// HSE; update this when adding a board preset with a different crystal.
 unsigned int hse_value = 32'000'000;
 
 namespace application
@@ -24,6 +22,11 @@ namespace application
     platform::MotorDriver& PlatformImpl::Motors()
     {
         return motors;
+    }
+
+    platform::WheelEncoders& PlatformImpl::Encoders()
+    {
+        return encoders;
     }
 
     void PlatformImpl::Run()

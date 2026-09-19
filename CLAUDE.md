@@ -91,6 +91,10 @@ path. Host tools, simulators, and test code may use normal heap patterns.
 
 - Headers start with `#pragma once`, never an `#ifndef` include guard. Enforced by
   `amp.no-include-guards` in `.github/linters/goodcheck.yml`.
+- **No comments in C++ source.** Not headers, not implementations, not tests. Name
+  things so the code reads without them. Anything that genuinely needs explaining —
+  a hardware truth table, a timer allocation, a design trade-off — belongs in
+  `documentation/`, where it is reviewed and stays findable.
 - Prefer fixed-size integer types (`uint8_t`, `int32_t`).
 - Keep non-trivial logic in `.cpp` files; small `inline`/`constexpr` helpers in
   headers are allowed (and common in hot paths).

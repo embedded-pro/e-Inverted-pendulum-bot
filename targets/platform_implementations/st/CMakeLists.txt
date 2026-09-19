@@ -9,6 +9,7 @@ target_link_libraries(inverted_pendulum_bot.platform_st PUBLIC
     inverted_pendulum_bot.platform_abstraction
     hal_st.instantiations
     hal_st.synchronous_stm32fxxx
+    infra.timer
     services.peripheral
     services.tracer
 )
@@ -33,6 +34,8 @@ target_sources(inverted_pendulum_bot.platform_st PRIVATE
     MotorBridgeStm.cpp
     MotorDriverStm.hpp
     MotorDriverStm.cpp
+    WheelEncodersStm.hpp
+    WheelEncodersStm.cpp
     PlatformImpl.hpp
     PlatformImpl.cpp
 )

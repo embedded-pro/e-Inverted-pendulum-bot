@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform_abstraction/MotorDriver.hpp"
+#include "core/platform_abstraction/WheelEncoders.hpp"
 #include "hal/interfaces/Gpio.hpp"
 #include "hal/interfaces/SerialCommunication.hpp"
 #include "services/tracer/Tracer.hpp"
@@ -18,6 +19,7 @@ namespace platform
         virtual hal::SerialCommunication& Communication() = 0;
         virtual services::Tracer& Tracer() = 0;
         virtual MotorDriver& Motors() = 0;
+        virtual WheelEncoders& Encoders() = 0;
         virtual void Run() = 0;
 
     protected:

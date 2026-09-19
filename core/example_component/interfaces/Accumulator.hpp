@@ -4,11 +4,6 @@
 
 namespace example
 {
-    // Example abstract interface.
-    //
-    // Note the deliberately non-virtual, protected destructor: the project forbids
-    // pure virtual destructors (`virtual ~T() = 0`) because they add flash/RAM
-    // overhead on embedded targets. Ownership stays with the concrete type.
     class Accumulator
     {
     public:

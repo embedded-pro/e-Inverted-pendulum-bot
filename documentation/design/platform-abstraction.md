@@ -84,7 +84,26 @@ references for its lifetime. Nothing is looked up globally and nothing is discov
 run time, so the dependency graph is visible at the construction site and every component
 can be handed a test double instead.
 
-### Part E — Failure is expressible
+### Part E — The timer budget is an architectural constraint
+
+The selected part has exactly two timer instances with an encoder mode, and both wheels need
+one. Everything else that wants a timer must therefore fit around them, and on this board
+that is what decides how the motors are driven: sign-magnitude on two single-channel timers
+rather than two duty cycles per motor on a four-channel one.
+
+| Timer | Use                                |
+|-------|------------------------------------|
+| TIM1  | Left wheel encoder, x4 quadrature  |
+| TIM2  | Right wheel encoder, x4 quadrature |
+| TIM16 | Left motor PWM                     |
+| TIM17 | Right motor PWM                    |
+
+This is a board-level allocation, not part of the abstraction — the roles above say nothing
+about timers, and a board with more of them is free to spend them differently. It is recorded
+here because it is the constraint that shaped two component designs, and rediscovering it
+from the pinout tables is expensive.
+
+### Part F — Failure is expressible
 
 Peripherals fail. Roles that can fail say so in their results rather than returning a
 plausible value — an inertial read reports that it failed, a driver configuration read-back

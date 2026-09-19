@@ -10,7 +10,6 @@
 
 namespace
 {
-    // Minimal GpioPin so DebugLed has a real output to drive in the host test.
     class GpioStub final
         : public hal::GpioPin
     {
@@ -75,8 +74,6 @@ namespace
             EXPECT_CALL(platform, Communication()).WillRepeatedly(testing::ReturnRef(communication));
             EXPECT_CALL(platform, Tracer()).WillRepeatedly(testing::ReturnRef(tracer));
 
-            // The terminal echoes every keystroke; the tests assert on the traced
-            // output instead, so the echo traffic itself is not interesting.
             EXPECT_CALL(communication, SendDataMock(testing::_)).Times(testing::AnyNumber());
         }
 
@@ -92,8 +89,6 @@ namespace
 
             communication.dataReceived(data);
 
-            // The terminal chains the next write from each completion, so the drain
-            // is bounded rather than run until it settles.
             for (int i = 0; i != 64 && communication.actionOnCompletion; ++i)
                 communication.actionOnCompletion();
 
@@ -192,11 +187,6 @@ TEST_F(CliTest, brake_shorts_the_motors)
 
     EXPECT_THAT(Output(), testing::HasSubstr("braking"));
 }
-
-// A malformed argument must move neither wheel. strtof reports failure as 0.0,
-// which is itself a valid effort, so these would otherwise read as a command to
-// stop rather than as a command to reject. The strict mock fails the test on its
-// own if Apply is reached.
 
 TEST_F(CliTest, drive_with_a_missing_right_argument_is_rejected)
 {

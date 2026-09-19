@@ -9,10 +9,6 @@ namespace application
 {
     namespace
     {
-        // strtof needs a terminated buffer, and BoundedConstString is not one. It
-        // also reports failure as 0.0, which for a motor command is a valid value,
-        // so the parse is only accepted when the whole token was consumed. The
-        // tokenizer never yields an empty token, so only the length is guarded.
         std::optional<float> ParseEffort(const infra::BoundedConstString& token)
         {
             std::array<char, 16> buffer{};
@@ -95,8 +91,6 @@ namespace application
             return;
         }
 
-        // Both are parsed before anything is applied, so a malformed command moves
-        // neither wheel.
         const infra::Tokenizer tokenizer{ params, ' ' };
         std::optional<float> effortLeft;
         std::optional<float> effortRight;

@@ -9,6 +9,7 @@
 #include "services/tracer/StreamWriterOnSerialCommunication.hpp"
 #include "services/tracer/Tracer.hpp"
 #include "targets/platform_implementations/st/MotorDriverStm.hpp"
+#include "targets/platform_implementations/st/WheelEncodersStm.hpp"
 
 namespace application
 {
@@ -22,6 +23,7 @@ namespace application
         hal::SerialCommunication& Communication() override;
         services::Tracer& Tracer() override;
         platform::MotorDriver& Motors() override;
+        platform::WheelEncoders& Encoders() override;
         void Run() override;
 
     private:
@@ -39,12 +41,12 @@ namespace application
 
         hal::GpioPinStm statusLed{ hal::Port::B, 0 };
 
-        // USART1 on the ST-LINK virtual COM port.
         hal::GpioPinStm consoleTx{ hal::Port::B, 6 };
         hal::GpioPinStm consoleRx{ hal::Port::B, 7 };
         hal::UartStm console{ 1, consoleTx, consoleRx };
 
         MotorDriverStm motors;
+        WheelEncodersStm encoders;
 
         services::StreamWriterOnSerialCommunication::WithStorage<256> streamWriter{ console };
         infra::TextOutputStream::WithErrorPolicy stream{ streamWriter };
