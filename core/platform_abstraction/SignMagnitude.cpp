@@ -1,4 +1,5 @@
 #include "core/platform_abstraction/SignMagnitude.hpp"
+#include "infra/util/ReallyAssert.hpp"
 
 namespace platform
 {
@@ -17,6 +18,8 @@ namespace platform
 
     SignMagnitude AsSignMagnitude(hal::Percent input1, hal::Percent input2)
     {
+        really_assert(input1 == Off() || input2 == Off() || (input1 == Full() && input2 == Full()));
+
         if (input1 == Full() && input2 == Full())
             return { true, Full() };
 

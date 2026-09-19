@@ -48,3 +48,12 @@ TEST(SignMagnitudeTest, full_duty_forward_is_distinct_from_brake)
     EXPECT_FALSE(forward.secondInputHigh);
     EXPECT_EQ(hal::Percent{ 100 }, forward.dutyCycle);
 }
+
+TEST(SignMagnitudeTest, full_duty_on_the_second_input_is_distinct_from_brake)
+{
+    const auto reverse = platform::AsSignMagnitude(hal::Percent{ 0 }, hal::Percent{ 100 });
+    const auto brake = platform::AsSignMagnitude(hal::Percent{ 100 }, hal::Percent{ 100 });
+
+    EXPECT_EQ(reverse.secondInputHigh, brake.secondInputHigh);
+    EXPECT_NE(reverse.dutyCycle, brake.dutyCycle);
+}
