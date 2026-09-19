@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_ST_MOTOR_DRIVER_STM_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_ST_MOTOR_DRIVER_STM_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorDriver.hpp"
 #include "hal_st/stm32fxxx/GpioStm.hpp"
@@ -42,5 +41,3 @@ namespace application
         MotorBridgeStm right;
     };
 }
-
-#endif

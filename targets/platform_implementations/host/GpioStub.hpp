@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_GPIO_STUB_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_GPIO_STUB_HPP
+#pragma once
 
 #include "hal/interfaces/Gpio.hpp"
 
@@ -46,5 +45,3 @@ namespace application
         {}
     };
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef CORE_EXAMPLE_COMPONENT_INTERFACES_ACCUMULATOR_HPP
-#define CORE_EXAMPLE_COMPONENT_INTERFACES_ACCUMULATOR_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -25,5 +24,3 @@ namespace example
         ~Accumulator() = default;
     };
 }
-
-#endif

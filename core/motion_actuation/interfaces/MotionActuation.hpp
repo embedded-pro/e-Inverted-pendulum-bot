@@ -1,5 +1,4 @@
-#ifndef CORE_MOTION_ACTUATION_INTERFACES_MOTION_ACTUATION_HPP
-#define CORE_MOTION_ACTUATION_INTERFACES_MOTION_ACTUATION_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -33,5 +32,3 @@ namespace motion
         ~MotionActuation() = default;
     };
 }
-
-#endif

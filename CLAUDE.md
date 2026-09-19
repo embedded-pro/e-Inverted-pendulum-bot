@@ -89,6 +89,8 @@ path. Host tools, simulators, and test code may use normal heap patterns.
 
 ### Other Constraints
 
+- Headers start with `#pragma once`, never an `#ifndef` include guard. Enforced by
+  `amp.no-include-guards` in `.github/linters/goodcheck.yml`.
 - Prefer fixed-size integer types (`uint8_t`, `int32_t`).
 - Keep non-trivial logic in `.cpp` files; small `inline`/`constexpr` helpers in
   headers are allowed (and common in hot paths).

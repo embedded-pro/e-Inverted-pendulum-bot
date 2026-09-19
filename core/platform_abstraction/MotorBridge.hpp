@@ -1,5 +1,4 @@
-#ifndef CORE_PLATFORM_ABSTRACTION_MOTOR_BRIDGE_HPP
-#define CORE_PLATFORM_ABSTRACTION_MOTOR_BRIDGE_HPP
+#pragma once
 
 #include "hal/synchronous_interfaces/SynchronousPwm.hpp"
 
@@ -20,5 +19,3 @@ namespace platform
         ~MotorBridge() = default;
     };
 }
-
-#endif

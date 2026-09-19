@@ -1,5 +1,4 @@
-#ifndef CORE_MOTION_ACTUATION_IMPLEMENTATIONS_MOTION_ACTUATION_IMPL_HPP
-#define CORE_MOTION_ACTUATION_IMPLEMENTATIONS_MOTION_ACTUATION_IMPL_HPP
+#pragma once
 
 #include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/MotorDriver.hpp"
@@ -43,5 +42,3 @@ namespace motion
         FaultCause fault{ FaultCause::none };
     };
 }
-
-#endif

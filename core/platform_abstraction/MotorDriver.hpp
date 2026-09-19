@@ -1,5 +1,4 @@
-#ifndef CORE_PLATFORM_ABSTRACTION_MOTOR_DRIVER_HPP
-#define CORE_PLATFORM_ABSTRACTION_MOTOR_DRIVER_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorBridge.hpp"
 #include "infra/util/Function.hpp"
@@ -23,5 +22,3 @@ namespace platform
         ~MotorDriver() = default;
     };
 }
-
-#endif

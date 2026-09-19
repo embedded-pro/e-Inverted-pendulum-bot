@@ -1,5 +1,4 @@
-#ifndef CORE_PLATFORM_ABSTRACTION_TEST_DOUBLES_MOTOR_BRIDGE_MOCK_HPP
-#define CORE_PLATFORM_ABSTRACTION_TEST_DOUBLES_MOTOR_BRIDGE_MOCK_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorBridge.hpp"
 #include "gmock/gmock.h"
@@ -17,5 +16,3 @@ namespace platform
         MOCK_METHOD(void, Stop, (), (override));
     };
 }
-
-#endif

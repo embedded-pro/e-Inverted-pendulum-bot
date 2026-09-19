@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_MOTOR_BRIDGE_STUB_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_MOTOR_BRIDGE_STUB_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorBridge.hpp"
 
@@ -21,5 +20,3 @@ namespace application
         {}
     };
 }
-
-#endif

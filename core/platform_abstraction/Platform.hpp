@@ -1,5 +1,4 @@
-#ifndef CORE_PLATFORM_ABSTRACTION_PLATFORM_HPP
-#define CORE_PLATFORM_ABSTRACTION_PLATFORM_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorDriver.hpp"
 #include "hal/interfaces/Gpio.hpp"
@@ -25,5 +24,3 @@ namespace platform
         ~Platform() = default;
     };
 }
-
-#endif

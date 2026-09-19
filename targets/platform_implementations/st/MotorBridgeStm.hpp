@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_ST_MOTOR_BRIDGE_STM_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_ST_MOTOR_BRIDGE_STM_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorBridge.hpp"
 #include "hal_st/synchronous_stm32fxxx/SynchronousPwmStm.hpp"
@@ -28,5 +27,3 @@ namespace application
         std::size_t firstInput;
     };
 }
-
-#endif

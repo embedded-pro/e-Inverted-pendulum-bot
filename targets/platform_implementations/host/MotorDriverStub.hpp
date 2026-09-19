@@ -1,5 +1,4 @@
-#ifndef TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_MOTOR_DRIVER_STUB_HPP
-#define TARGETS_PLATFORM_IMPLEMENTATIONS_HOST_MOTOR_DRIVER_STUB_HPP
+#pragma once
 
 #include "core/platform_abstraction/MotorDriver.hpp"
 #include "targets/platform_implementations/host/MotorBridgeStub.hpp"
@@ -36,5 +35,3 @@ namespace application
         infra::Function<void()> onFault;
     };
 }
-
-#endif

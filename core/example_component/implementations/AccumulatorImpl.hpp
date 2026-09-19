@@ -1,5 +1,4 @@
-#ifndef CORE_EXAMPLE_COMPONENT_IMPLEMENTATIONS_ACCUMULATOR_IMPL_HPP
-#define CORE_EXAMPLE_COMPONENT_IMPLEMENTATIONS_ACCUMULATOR_IMPL_HPP
+#pragma once
 
 #include "core/example_component/interfaces/Accumulator.hpp"
 
@@ -17,5 +16,3 @@ namespace example
         int32_t total{ 0 };
     };
 }
-
-#endif

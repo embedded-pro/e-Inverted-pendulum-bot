@@ -1,5 +1,4 @@
-#ifndef CORE_CLI_CLI_HPP
-#define CORE_CLI_CLI_HPP
+#pragma once
 
 #include "core/motion_actuation/interfaces/MotionActuation.hpp"
 #include "core/platform_abstraction/Platform.hpp"
@@ -43,5 +42,3 @@ namespace application
         CliCommands commands;
     };
 }
-
-#endif
